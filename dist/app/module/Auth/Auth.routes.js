@@ -1,0 +1,19 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.AuthRoutes = void 0;
+const express_1 = require("express");
+// import { AuthControllers } from "./Auth.controllers";
+// import validateRequest from "../../middlewares/validateRequest";
+// import { AuthValidations } from "./Auth.validations";
+// import auth from "../../middlewares/auth";
+// import { UserRole } from "@prisma/client";
+const router = (0, express_1.Router)();
+const Auth_controllers_1 = require("./Auth.controllers");
+const Auth_validations_1 = require("./Auth.validations");
+const validateRequest_1 = __importDefault(require("../../middlewares/validateRequest"));
+router.post('/register', (0, validateRequest_1.default)(Auth_validations_1.AuthValidation.register), Auth_controllers_1.AuthController.register);
+router.post('/login', (0, validateRequest_1.default)(Auth_validations_1.AuthValidation.login), Auth_controllers_1.AuthController.login);
+exports.AuthRoutes = router;
