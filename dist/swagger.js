@@ -16,24 +16,24 @@ const swaggerDefinition = {
             url: "http://localhost:5002/api/v1",
             description: "Local Server",
         },
-        // {
-        //   url: "https://my-studio-backend.vercel.app/api/v1",
-        //   description: "Deployed Server",
-        // },
+        {
+            url: "https://hu-iapams-api.vercel.app/api/v1",
+            description: "Deployed Server",
+        },
     ],
     components: {
-    // securitySchemes: {
-    //   AdminAuth: {
-    //     type: "apiKey",
-    //     in: "header",
-    //     name: "Authorization",
-    //   },
-    //   UserAuth: {
-    //     type: "apiKey",
-    //     in: "header",
-    //     name: "Authorization",
-    //   },
-    // },
+        securitySchemes: {
+            AdminAuth: {
+                type: "apiKey",
+                in: "header",
+                name: "Authorization",
+            },
+            UserAuth: {
+                type: "apiKey",
+                in: "header",
+                name: "Authorization",
+            },
+        },
     },
 };
 const apiPaths = process.env.NODE_ENV === 'production'
