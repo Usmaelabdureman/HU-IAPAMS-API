@@ -33,9 +33,19 @@ const swaggerDefinition = {
   },
 };
 
+const apiPaths = process.env.NODE_ENV === 'production'
+  ? [
+      // In production, only look at compiled files
+      "dist/app/module/**/*.routes.js", "dist/app/module/**/*.swagger.js"
+    ]
+  : [
+      // In development, look at TypeScript files
+       "src/app/module/**/*.routes.ts", "./src/app/module/**/*.swagger.ts"
+    ];
+
 const options = {
   swaggerDefinition,
-  apis: ["./src/app/module/**/*.swagger.ts"],
+  apis: apiPaths
 };
 
 const swaggerSpec = swaggerJsdoc(options);
