@@ -79,8 +79,40 @@ const loginUser = (loginData) => __awaiter(void 0, void 0, void 0, function* () 
         tokens
     };
 });
+const getAllUsers = (page, limit, filters) => __awaiter(void 0, void 0, void 0, function* () {
+    const skip = (page - 1) * limit;
+    // Build the query object based on filters
+    const query = {};
+    if (filters.searchTerm) {
+        query.$or = [
+            { username: { $regex: filters.searchTerm, $options: 'i' } },
+            { email: { $regex: filters.searchTerm, $options: 'i' } },
+            { fullName: { $regex: filters.searchTerm, $options: 'i' } }
+        ];
+    }
+    if (filters.department) {
+        query.department = filters.department;
+    }
+    if (filters.positionType) {
+        query.positionType = filters.positionType;
+    }
+    if (filters.status) {
+        query.status = filters.status;
+    }
+    const users = yield Auth_models_1.User.find(query).skip(skip).limit(limit);
+    const total = yield Auth_models_1.User.countDocuments(query);
+    return {
+        meta: {
+            page,
+            limit,
+            total
+        },
+        data: users
+    };
+});
 exports.AuthService = {
     registerUser,
     loginUser,
-    generateAuthTokens
+    generateAuthTokens,
+    getAllUsers
 };

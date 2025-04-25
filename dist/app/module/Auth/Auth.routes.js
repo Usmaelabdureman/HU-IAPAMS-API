@@ -16,4 +16,5 @@ const Auth_validations_1 = require("./Auth.validations");
 const validateRequest_1 = __importDefault(require("../../middlewares/validateRequest"));
 router.post('/register', (0, validateRequest_1.default)(Auth_validations_1.AuthValidation.register), Auth_controllers_1.AuthController.register);
 router.post('/login', (0, validateRequest_1.default)(Auth_validations_1.AuthValidation.login), Auth_controllers_1.AuthController.login);
+router.get('/getall-users', Auth_controllers_1.AuthController.getAllUsers);
 exports.AuthRoutes = router;

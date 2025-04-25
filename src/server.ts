@@ -13,6 +13,7 @@ async function main() {
     
     server = app.listen(port, () => {
       console.log(`Server is running on port ${port}`);
+      console.log(`Environment: ${process.env.NODE_ENV}`);
       console.log(`Swagger docs at http://localhost:${port}/api-docs`);
     });
   } catch (error) {

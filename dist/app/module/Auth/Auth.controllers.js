@@ -16,6 +16,8 @@ exports.AuthController = void 0;
 const http_status_1 = __importDefault(require("http-status"));
 const Auth_services_1 = require("./Auth.services");
 const catchAsync_1 = __importDefault(require("../../shared/catchAsync"));
+const pick_1 = require("../../utils/pick");
+const paginationHelper_1 = require("../../utils/paginationHelper");
 const register = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const userData = req.body;
     const result = yield Auth_services_1.AuthService.registerUser(userData);
@@ -34,7 +36,21 @@ const login = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, 
         data: result
     });
 }));
+const getAllUsers = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const filters = (0, pick_1.pick)(req.query, ['searchTerm', 'department', 'positionType', 'status']);
+    const paginationOptions = (0, pick_1.pick)(req.query, paginationHelper_1.paginationFields);
+    const page = parseInt(paginationOptions.page, 10) || 1;
+    const limit = parseInt(paginationOptions.limit, 10) || 10;
+    const result = yield Auth_services_1.AuthService.getAllUsers(page, limit, filters);
+    res.status(http_status_1.default.OK).send({
+        success: true,
+        message: 'Users retrieved successfully',
+        meta: result.meta,
+        data: result.data
+    });
+}));
 exports.AuthController = {
     register,
-    login
+    login,
+    getAllUsers
 };

@@ -50,6 +50,10 @@ router.post(
   AuthController.login
 );
 
+router.get(
+  '/getall-users',
+AuthController.getAllUsers
+)
 
 
 export const AuthRoutes = router;

@@ -1,0 +1,12 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.PositionRoutes = void 0;
+const express_1 = require("express");
+const Position_controllers_1 = require("./Position.controllers");
+const router = (0, express_1.Router)();
+router.post("/", Position_controllers_1.PositionController.createPosition);
+router.get("/get-all-positions", Position_controllers_1.PositionController.getAllPositions);
+router.get("/:id", Position_controllers_1.PositionController.getPositionById);
+router.put("/:id", Position_controllers_1.PositionController.updatePosition);
+router.delete("/:id", Position_controllers_1.PositionController.closePosition);
+exports.PositionRoutes = router;

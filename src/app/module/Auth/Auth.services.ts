@@ -96,8 +96,52 @@ const loginUser = async (loginData: ILoginRequest): Promise<IAuthResponse> => {
   };
 };
 
+const getAllUsers = async (
+  page: number,
+  limit: number,
+  filters: { searchTerm?: string; department?: string; positionType?: string; status?: string }
+): Promise<{ meta: { page: number; limit: number; total: number }; data: any[] }> => {
+  const skip = (page - 1) * limit;
+
+  // Build the query object based on filters
+  const query: any = {};
+
+  if (filters.searchTerm) {
+    query.$or = [
+      { username: { $regex: filters.searchTerm, $options: 'i' } },
+      { email: { $regex: filters.searchTerm, $options: 'i' } },
+      { fullName: { $regex: filters.searchTerm, $options: 'i' } }
+    ];
+  }
+
+  if (filters.department) {
+    query.department = filters.department;
+  }
+
+  if (filters.positionType) {
+    query.positionType = filters.positionType;
+  }
+
+  if (filters.status) {
+    query.status = filters.status;
+  }
+
+  const users = await User.find(query).skip(skip).limit(limit);
+  const total = await User.countDocuments(query);
+
+  return {
+    meta: {
+      page,
+      limit,
+      total
+    },
+    data: users
+  };
+};
+
 export const AuthService = {
   registerUser,
   loginUser,
-  generateAuthTokens
+  generateAuthTokens,
+  getAllUsers
 };

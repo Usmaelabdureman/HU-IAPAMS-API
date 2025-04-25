@@ -23,6 +23,7 @@ function main() {
             yield (0, db_1.default)();
             server = app_1.default.listen(port, () => {
                 console.log(`Server is running on port ${port}`);
+                console.log(`Environment: ${process.env.NODE_ENV}`);
                 console.log(`Swagger docs at http://localhost:${port}/api-docs`);
             });
         }
