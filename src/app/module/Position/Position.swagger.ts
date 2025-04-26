@@ -7,7 +7,7 @@
 
 /**
  * @swagger
- * /positions:
+ * /positions/create:
  *   post:
  *     summary: Create a new academic position
  *     tags: [Positions]

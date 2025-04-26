@@ -24,11 +24,11 @@ const swaggerDefinition = {
         in: "header",
         name: "Authorization",
       },
-      UserAuth: {
-        type: "apiKey",
-        in: "header",
-        name: "Authorization",
-      },
+      // UserAuth: {
+      //   type: "apiKey",
+      //   in: "header",
+      //   name: "Authorization",
+      // },
     },
   },
 };

@@ -10,7 +10,7 @@ const routes = [
         route: Auth_routes_1.AuthRoutes,
     },
     {
-        path: '/position',
+        path: '/positions',
         route: Position_routes_1.PositionRoutes,
     }
 ];
