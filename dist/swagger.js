@@ -7,9 +7,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 // const swaggerDefinition = {
 //   openapi: "3.0.0",
 //   info: {
-//     title: "HU-IAPAMS internal vacancy API",
+//     title: "HU-IAPAMS Internal Vacancy API",
 //     version: "1.0.0",
-//     description: "API documentation for HU-IAPAMS internal vacancy",
+//     description: "API documentation for HU-IAPAMS internal vacancy management system.",
 //   },
 //   servers: [
 //     {
@@ -17,7 +17,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 //       description: "Local Server",
 //     },
 //     {
-//       url: "https://hu-iapams-api.vercel.app/api/v1",
+//       url: "https://hu-iapams-api.onrender.com/api/v1",
 //       description: "Deployed Server",
 //     },
 //   ],
@@ -25,32 +25,45 @@ Object.defineProperty(exports, "__esModule", { value: true });
 //     securitySchemes: {
 //       bearerAuth: {
 //         type: "http",
-//         scheme: "Bearer",
+//         scheme: "bearer",  
 //         bearerFormat: "JWT",
-//         description: "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\""
-//       }
-//     }
+//         description: 'JWT Authorization header using the Bearer scheme. Example: "Authorization: Bearer {token}"',
+//       },
+//     },
 //   },
-//   security: [{
-//     bearerAuth: []
-//   }]
+//   security: [
+//     {
+//       bearerAuth: [],
+//     },
+//   ],
 // };
-// const apiPaths = process.env.NODE_ENV === 'production'
+// const apiPaths = process.env.NODE_ENV === "production"
 //   ? [
-//       "dist/app/module/**/*.routes.js", 
-//       "dist/app/module/**/*.swagger.js"
+//       "dist/app/module/**/*.routes.js",
+//       "dist/app/module/**/*.swagger.js",
 //     ]
 //   : [
-//       "src/app/module/**/*.routes.ts", 
-//       "src/app/module/**/*.swagger.ts"
+//       "src/app/module/**/*.routes.ts",
+//       "src/app/module/**/*.swagger.ts",
 //     ];
 // const options = {
-//   swaggerDefinition,
-//   apis: apiPaths
+//   definition: swaggerDefinition, 
+//   apis: apiPaths,
 // };
 // const swaggerSpec = swaggerJsdoc(options);
 // export default swaggerSpec;
 const swagger_jsdoc_1 = __importDefault(require("swagger-jsdoc"));
+const isProduction = process.env.NODE_ENV === "production";
+const localServer = {
+    url: "http://localhost:5002/api/v1",
+    description: "Local Server",
+};
+const deployedServer = {
+    url: "https://hu-iapams-api.onrender.com/api/v1",
+    description: "Deployed Server",
+};
+// Prioritize current environment's server
+const servers = isProduction ? [deployedServer, localServer] : [localServer, deployedServer];
 const swaggerDefinition = {
     openapi: "3.0.0",
     info: {
@@ -58,16 +71,7 @@ const swaggerDefinition = {
         version: "1.0.0",
         description: "API documentation for HU-IAPAMS internal vacancy management system.",
     },
-    servers: [
-        {
-            url: "http://localhost:5002/api/v1",
-            description: "Local Server",
-        },
-        {
-            url: "https://hu-iapams-api.vercel.app/api/v1",
-            description: "Deployed Server",
-        },
-    ],
+    servers,
     components: {
         securitySchemes: {
             bearerAuth: {
@@ -84,7 +88,7 @@ const swaggerDefinition = {
         },
     ],
 };
-const apiPaths = process.env.NODE_ENV === "production"
+const apiPaths = isProduction
     ? [
         "dist/app/module/**/*.routes.js",
         "dist/app/module/**/*.swagger.js",
