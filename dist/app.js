@@ -19,6 +19,7 @@ app.use((0, cors_1.default)({
     origin: [
         'http://localhost:5173',
         'http://localhost:5002',
+        'https://hu-iapms.vercel.app',
     ],
     // credentials: true,
 }));

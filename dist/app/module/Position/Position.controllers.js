@@ -1,4 +1,10 @@
 "use strict";
+// import { Request, Response } from 'express';
+// import httpStatus from 'http-status';
+// import { PositionService } from './Position.services';
+// import catchAsync from '../../shared/catchAsync';
+// import { pick } from '../../utils/pick';
+// import { paginationFields } from '../../utils/paginationHelper';
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -15,88 +21,78 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PositionController = void 0;
 const http_status_1 = __importDefault(require("http-status"));
 const Position_services_1 = require("./Position.services");
-const catchAsync_1 = __importDefault(require("../../shared/catchAsync"));
-const pick_1 = require("../../utils/pick");
-const paginationHelper_1 = require("../../utils/paginationHelper");
-const createPosition = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
-    const positionData = req.body;
-    const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.userId;
-    if (!userId) {
-        res.status(http_status_1.default.BAD_REQUEST).json({
-            success: false,
-            message: 'User ID is required',
-        });
-        return;
+const ApiError_1 = __importDefault(require("../../error/ApiError"));
+const createPosition = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        if (!req.user) {
+            throw new ApiError_1.default(http_status_1.default.UNAUTHORIZED, 'Not authenticated');
+        }
+        const positionData = req.body;
+        const result = yield Position_services_1.PositionService.createPosition(positionData, req.user.userId);
+        res.status(http_status_1.default.CREATED).send(result);
     }
-    const result = yield Position_services_1.PositionService.createPosition(positionData, userId);
-    res.status(http_status_1.default.CREATED).json({
-        success: true,
-        message: 'Position created successfully',
-        data: result,
-    });
-}));
-const getAllPositions = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const filters = (0, pick_1.pick)(req.query, ['searchTerm', 'department', 'positionType', 'status']);
-    const paginationOptions = (0, pick_1.pick)(req.query, paginationHelper_1.paginationFields);
-    const result = yield Position_services_1.PositionService.getAllPositions(filters, paginationOptions);
-    res.status(http_status_1.default.OK).json({
-        success: true,
-        message: 'Positions retrieved successfully',
-        meta: result.meta,
-        data: result.data,
-    });
-}));
-const getPositionById = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const id = req.params.id;
-    const result = yield Position_services_1.PositionService.getPositionById(id);
-    res.status(http_status_1.default.OK).json({
-        success: true,
-        message: 'Position retrieved successfully',
-        data: result,
-    });
-}));
-const updatePosition = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
-    const id = req.params.id;
-    const updateData = req.body;
-    const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.userId;
-    if (!userId) {
-        res.status(http_status_1.default.BAD_REQUEST).json({
-            success: false,
-            message: 'User ID is required',
-        });
-        return;
+    catch (error) {
+        next(error);
     }
-    const result = yield Position_services_1.PositionService.updatePosition(id, updateData, userId);
-    res.status(http_status_1.default.OK).json({
-        success: true,
-        message: 'Position updated successfully',
-        data: result,
-    });
-}));
-const closePosition = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
-    const id = req.params.id;
-    const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.userId;
-    if (!userId) {
-        res.status(http_status_1.default.BAD_REQUEST).json({
-            success: false,
-            message: 'User ID is required',
-        });
-        return;
+});
+const getAllPositions = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const filters = req.query;
+        const paginationOptions = {
+            page: Number(req.query.page) || 1,
+            limit: Number(req.query.limit) || 10
+        };
+        const result = yield Position_services_1.PositionService.getAllPositions(filters, paginationOptions);
+        res.status(http_status_1.default.OK).send(result);
     }
-    const result = yield Position_services_1.PositionService.closePosition(id, userId);
-    res.status(http_status_1.default.OK).json({
-        success: true,
-        message: 'Position closed successfully',
-        data: result,
-    });
-}));
+    catch (error) {
+        next(error);
+    }
+});
+const getPositionById = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { id } = req.params;
+        const result = yield Position_services_1.PositionService.getPositionById(id);
+        if (!result) {
+            throw new ApiError_1.default(http_status_1.default.NOT_FOUND, 'Position not found');
+        }
+        res.status(http_status_1.default.OK).send(result);
+    }
+    catch (error) {
+        next(error);
+    }
+});
+const updatePosition = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        if (!req.user) {
+            throw new ApiError_1.default(http_status_1.default.UNAUTHORIZED, 'Not authenticated');
+        }
+        const { id } = req.params;
+        const updateData = req.body;
+        const result = yield Position_services_1.PositionService.updatePosition(id, updateData, req.user.userId);
+        res.status(http_status_1.default.OK).send(result);
+    }
+    catch (error) {
+        next(error);
+    }
+});
+const closePosition = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        if (!req.user) {
+            throw new ApiError_1.default(http_status_1.default.UNAUTHORIZED, 'Not authenticated');
+        }
+        const { id } = req.params;
+        const result = yield Position_services_1.PositionService.closePosition(id, req.user.userId);
+        res.status(http_status_1.default.OK).send(result);
+    }
+    catch (error) {
+        next(error);
+    }
+});
 exports.PositionController = {
     createPosition,
     getAllPositions,
     getPositionById,
     updatePosition,
-    closePosition,
+    closePosition
 };

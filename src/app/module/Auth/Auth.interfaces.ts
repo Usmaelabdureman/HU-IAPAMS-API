@@ -29,3 +29,7 @@ export interface ILoginRequest {
     userId: string;
     role: string;
   }
+
+  export interface JwtPayload {
+    userId:string;
+  }
