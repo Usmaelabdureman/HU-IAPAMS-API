@@ -11,8 +11,8 @@ exports.default = {
     node_env: process.env.NODE_ENV,
     mongodb_uri: process.env.MONGODB_URI,
     salt_rounds: process.env.PASSWORD_SALT_ROUNDS,
-    jwt_access_secret: process.env.JWT_ACCESS_SECRET,
-    jwt_refresh_secret: process.env.JWT_REFRESH_SECRET,
-    jwt_access_expires_in: process.env.JWT_ACCESS_EXPIRES_IN,
-    jwt_refresh_expires_in: process.env.JWT_REFRESH_EXPIRES_IN,
+    jwt_access_secret: process.env.JWT_ACCESS_SECRET || "plCyCNec9l1L_HzcUEdhN7OQrUWgo3VO7C9-GQrnbvQ",
+    jwt_refresh_secret: process.env.JWT_REFRESH_SECRET || "1cIsp1tlnEIMs9CabFPeR5jJ15kiYTZ2LiYCPZUUPpc",
+    jwt_access_expires_in: process.env.JWT_ACCESS_EXPIRES_IN || '1h',
+    jwt_refresh_expires_in: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
 };

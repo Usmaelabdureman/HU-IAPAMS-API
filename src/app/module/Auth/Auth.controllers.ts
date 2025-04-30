@@ -46,8 +46,75 @@ const getAllUsers = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+
+// Auth.controller.ts
+const updateUser = catchAsync(async (req: Request, res: Response) :Promise<void> => {
+  const { id } = req.params;
+  const updateData = req.body;
+  const requesterId = req.user?.userId;
+  const requesterRole = req.user?.role;
+
+  if (!id) {
+    res.status(httpStatus.BAD_REQUEST).send({
+      success: false,
+      message: 'User ID is required',
+    });
+    return;
+  }
+  if (!id) {
+    throw new Error('User ID is required');
+  }
+  if (!id) {
+    throw new Error('User ID is required');
+  }
+  const result = await AuthService.updateUser(id, updateData, requesterId!, requesterRole!);
+
+  res.status(httpStatus.OK).send({
+    success: true,
+    message: 'User updated successfully',
+    data: result
+  });
+});
+
+const deleteUser = catchAsync(async (req: Request, res: Response): Promise<void> => {
+  const { id } = req.params;
+  const requesterId = req.user?.userId;
+  const requesterRole = req.user?.role;
+
+  if (!requesterId || !requesterRole) {
+    res.status(httpStatus.BAD_REQUEST).send({
+      success: false,
+      message: 'Requester ID and role are required',
+    });
+    return;
+  }
+
+  const result = await AuthService.deleteUser(id, requesterId, requesterRole);
+
+  res.status(httpStatus.OK).send({
+    success: true,
+    message: result.message
+  });
+});
+
+const changePassword = catchAsync(async (req: Request, res: Response) => {
+  const { currentPassword, newPassword } = req.body;
+  const userId = req.user?.userId;
+
+  const result = await AuthService.changePassword(userId!, currentPassword, newPassword);
+
+  res.status(httpStatus.OK).send({
+    success: true,
+    message: result.message
+  });
+});
+
+
 export const AuthController = {
   register,
   login,
-  getAllUsers
+  getAllUsers,
+  updateUser,
+  deleteUser,
+  changePassword,
 };

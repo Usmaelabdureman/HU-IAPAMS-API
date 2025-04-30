@@ -1,5 +1,5 @@
 import { User } from './Auth.models';
-import { ILoginRequest, IRegisterRequest, IAuthResponse } from './Auth.interfaces';
+import { ILoginRequest, IRegisterRequest, IAuthResponse, IUpdateUserRequest } from './Auth.interfaces';
 import ApiError from '../../error/ApiError';
 import httpStatus from 'http-status';
 import jwt, { SignOptions } from 'jsonwebtoken';
@@ -40,7 +40,6 @@ const accessToken = jwt.sign(
 };
 
 const registerUser = async (userData: IRegisterRequest): Promise<IAuthResponse> => {
-  // Check if username or email already exists
   const existingUser = await User.findOne({ 
     $or: [
       { username: userData.username }, 
@@ -139,9 +138,104 @@ const getAllUsers = async (
   };
 };
 
+
+const updateUser = async (
+  userId: string,
+  updateData: IUpdateUserRequest,
+  requesterId: string,
+  requesterRole: string
+): Promise<any> => {
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+  }
+
+ 
+  if (requesterRole !== 'admin' && requesterId !== userId) {
+    throw new ApiError(httpStatus.FORBIDDEN, 'Not authorized to update this user');
+  }
+
+  if (updateData.email || updateData.username) {
+    const existingUser = await User.findOne({
+      $or: [
+        { email: updateData.email },
+        { username: updateData.username }
+      ],
+      _id: { $ne: userId }
+    });
+
+    if (existingUser) {
+      throw new ApiError(httpStatus.CONFLICT, 'Email or username already exists');
+    }
+  }
+
+  // Prevent role modification for non-admins
+  if (updateData.role && requesterRole !== 'admin') {
+    throw new ApiError(httpStatus.FORBIDDEN, 'Only admins can modify roles');
+  }
+
+  Object.assign(user, updateData);
+  await user.save();
+
+  return {
+    _id: user.id.toString(),
+    username: user.username,
+    email: user.email,
+    role: user.role,
+    fullName: user.fullName,
+    status: user.status
+  };
+};
+
+const deleteUser = async (
+  userId: string,
+  requesterId: string,
+  requesterRole: string
+): Promise<{ message: string }> => {
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+  }
+
+  if (requesterRole !== 'admin' && requesterId !== userId) {
+    throw new ApiError(httpStatus.FORBIDDEN, 'Not authorized to delete this user');
+  }
+
+  // Soft delete
+  user.status = 'inactive';
+  await user.save();
+
+  return { message: 'User deactivated successfully' };
+};
+
+const changePassword = async (
+  userId: string,
+  currentPassword: string,
+  newPassword: string
+): Promise<{ message: string }> => {
+  const user = await User.findById(userId).select('+password');
+  if (!user) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+  }
+
+  if (!(await user.comparePassword(currentPassword))) {
+    throw new ApiError(httpStatus.UNAUTHORIZED, 'Current password is incorrect');
+  }
+
+  user.password = newPassword;
+  await user.save();
+
+  return { message: 'Password changed successfully' };
+};
+
+
+
 export const AuthService = {
   registerUser,
   loginUser,
   generateAuthTokens,
-  getAllUsers
+  getAllUsers,
+  updateUser,
+  deleteUser,
+  changePassword,
 };

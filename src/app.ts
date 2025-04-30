@@ -20,12 +20,12 @@ app.use(
       'http://localhost:5173', 
       'http://localhost:5002',
       'https://hu-iapms.vercel.app',
-
     ],
-
-    // credentials: true,
+    credentials: true,
+    exposedHeaders: ['Authorization']
   })
 );
+
 
 // test server
 app.get("/", (req, res) => {

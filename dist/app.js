@@ -21,7 +21,8 @@ app.use((0, cors_1.default)({
         'http://localhost:5002',
         'https://hu-iapms.vercel.app',
     ],
-    // credentials: true,
+    credentials: true,
+    exposedHeaders: ['Authorization']
 }));
 // test server
 app.get("/", (req, res) => {

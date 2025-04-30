@@ -33,7 +33,6 @@ const generateAuthTokens = (user) => __awaiter(void 0, void 0, void 0, function*
     return { accessToken, refreshToken };
 });
 const registerUser = (userData) => __awaiter(void 0, void 0, void 0, function* () {
-    // Check if username or email already exists
     const existingUser = yield Auth_models_1.User.findOne({
         $or: [
             { username: userData.username },
@@ -110,9 +109,72 @@ const getAllUsers = (page, limit, filters) => __awaiter(void 0, void 0, void 0, 
         data: users
     };
 });
+const updateUser = (userId, updateData, requesterId, requesterRole) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = yield Auth_models_1.User.findById(userId);
+    if (!user) {
+        throw new ApiError_1.default(http_status_1.default.NOT_FOUND, 'User not found');
+    }
+    if (requesterRole !== 'admin' && requesterId !== userId) {
+        throw new ApiError_1.default(http_status_1.default.FORBIDDEN, 'Not authorized to update this user');
+    }
+    if (updateData.email || updateData.username) {
+        const existingUser = yield Auth_models_1.User.findOne({
+            $or: [
+                { email: updateData.email },
+                { username: updateData.username }
+            ],
+            _id: { $ne: userId }
+        });
+        if (existingUser) {
+            throw new ApiError_1.default(http_status_1.default.CONFLICT, 'Email or username already exists');
+        }
+    }
+    // Prevent role modification for non-admins
+    if (updateData.role && requesterRole !== 'admin') {
+        throw new ApiError_1.default(http_status_1.default.FORBIDDEN, 'Only admins can modify roles');
+    }
+    Object.assign(user, updateData);
+    yield user.save();
+    return {
+        _id: user.id.toString(),
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        fullName: user.fullName,
+        status: user.status
+    };
+});
+const deleteUser = (userId, requesterId, requesterRole) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = yield Auth_models_1.User.findById(userId);
+    if (!user) {
+        throw new ApiError_1.default(http_status_1.default.NOT_FOUND, 'User not found');
+    }
+    if (requesterRole !== 'admin' && requesterId !== userId) {
+        throw new ApiError_1.default(http_status_1.default.FORBIDDEN, 'Not authorized to delete this user');
+    }
+    // Soft delete
+    user.status = 'inactive';
+    yield user.save();
+    return { message: 'User deactivated successfully' };
+});
+const changePassword = (userId, currentPassword, newPassword) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = yield Auth_models_1.User.findById(userId).select('+password');
+    if (!user) {
+        throw new ApiError_1.default(http_status_1.default.NOT_FOUND, 'User not found');
+    }
+    if (!(yield user.comparePassword(currentPassword))) {
+        throw new ApiError_1.default(http_status_1.default.UNAUTHORIZED, 'Current password is incorrect');
+    }
+    user.password = newPassword;
+    yield user.save();
+    return { message: 'Password changed successfully' };
+});
 exports.AuthService = {
     registerUser,
     loginUser,
     generateAuthTokens,
-    getAllUsers
+    getAllUsers,
+    updateUser,
+    deleteUser,
+    changePassword,
 };

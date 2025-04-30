@@ -28,8 +28,19 @@ export interface ILoginRequest {
   export interface ITokenPayload {
     userId: string;
     role: string;
+    email:string;
   }
 
   export interface JwtPayload {
     userId:string;
   }
+  export interface IUpdateUserRequest {
+    role: boolean;
+    username?: string;
+    email?: string;
+    fullName?: string;
+    department?: string;
+    positionType?: string;
+    status?: 'active' | 'inactive';
+  }
+  

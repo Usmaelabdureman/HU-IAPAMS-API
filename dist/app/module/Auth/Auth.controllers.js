@@ -49,8 +49,66 @@ const getAllUsers = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, vo
         data: result.data
     });
 }));
+// Auth.controller.ts
+const updateUser = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b;
+    const { id } = req.params;
+    const updateData = req.body;
+    const requesterId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.userId;
+    const requesterRole = (_b = req.user) === null || _b === void 0 ? void 0 : _b.role;
+    if (!id) {
+        res.status(http_status_1.default.BAD_REQUEST).send({
+            success: false,
+            message: 'User ID is required',
+        });
+        return;
+    }
+    if (!id) {
+        throw new Error('User ID is required');
+    }
+    if (!id) {
+        throw new Error('User ID is required');
+    }
+    const result = yield Auth_services_1.AuthService.updateUser(id, updateData, requesterId, requesterRole);
+    res.status(http_status_1.default.OK).send({
+        success: true,
+        message: 'User updated successfully',
+        data: result
+    });
+}));
+const deleteUser = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b;
+    const { id } = req.params;
+    const requesterId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.userId;
+    const requesterRole = (_b = req.user) === null || _b === void 0 ? void 0 : _b.role;
+    if (!requesterId || !requesterRole) {
+        res.status(http_status_1.default.BAD_REQUEST).send({
+            success: false,
+            message: 'Requester ID and role are required',
+        });
+        return;
+    }
+    const result = yield Auth_services_1.AuthService.deleteUser(id, requesterId, requesterRole);
+    res.status(http_status_1.default.OK).send({
+        success: true,
+        message: result.message
+    });
+}));
+const changePassword = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    const { currentPassword, newPassword } = req.body;
+    const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.userId;
+    const result = yield Auth_services_1.AuthService.changePassword(userId, currentPassword, newPassword);
+    res.status(http_status_1.default.OK).send({
+        success: true,
+        message: result.message
+    });
+}));
 exports.AuthController = {
     register,
     login,
-    getAllUsers
+    getAllUsers,
+    updateUser,
+    deleteUser,
+    changePassword,
 };

@@ -62,8 +62,9 @@ const ApiError_1 = __importDefault(require("../../error/ApiError"));
 const http_status_1 = __importDefault(require("http-status"));
 const paginationHelpers = __importStar(require("../../utils/paginationHelper"));
 const createPosition = (positionData, userId) => __awaiter(void 0, void 0, void 0, function* () {
-    positionData.createdBy = userId;
-    return yield Position_models_1.Position.create(positionData);
+    // Add createdBy to the position data
+    const positionWithCreator = Object.assign(Object.assign({}, positionData), { createdBy: userId });
+    return yield Position_models_1.Position.create(positionWithCreator);
 });
 const getAllPositions = (filters, paginationOptions) => __awaiter(void 0, void 0, void 0, function* () {
     const { searchTerm } = filters, filtersData = __rest(filters, ["searchTerm"]);

@@ -5,8 +5,13 @@ import { IPosition, IPositionFilters } from './Position.interfaces';
 import * as paginationHelpers from '../../utils/paginationHelper';
 
 const createPosition = async (positionData: IPosition, userId: string) => {
-  positionData.createdBy = userId;
-  return await Position.create(positionData);
+  // Add createdBy to the position data
+  const positionWithCreator = {
+    ...positionData,
+    createdBy: userId
+  };
+  
+  return await Position.create(positionWithCreator);
 };
 
 const getAllPositions = async (filters: IPositionFilters, paginationOptions: any) => {

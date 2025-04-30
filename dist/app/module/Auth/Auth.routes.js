@@ -1,20 +1,15 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthRoutes = void 0;
+// Auth.routes.ts
 const express_1 = require("express");
-// import { AuthControllers } from "./Auth.controllers";
-// import validateRequest from "../../middlewares/validateRequest";
-// import { AuthValidations } from "./Auth.validations";
-// import auth from "../../middlewares/auth";
-// import { UserRole } from "@prisma/client";
-const router = (0, express_1.Router)();
+const auth_1 = require("../../middlewares/auth");
 const Auth_controllers_1 = require("./Auth.controllers");
-const Auth_validations_1 = require("./Auth.validations");
-const validateRequest_1 = __importDefault(require("../../middlewares/validateRequest"));
-router.post('/register', (0, validateRequest_1.default)(Auth_validations_1.AuthValidation.register), Auth_controllers_1.AuthController.register);
-router.post('/login', (0, validateRequest_1.default)(Auth_validations_1.AuthValidation.login), Auth_controllers_1.AuthController.login);
-router.get('/getall-users', Auth_controllers_1.AuthController.getAllUsers);
+const router = (0, express_1.Router)();
+router.post('/register', Auth_controllers_1.AuthController.register);
+router.post('/login', Auth_controllers_1.AuthController.login);
+router.get('/users', (0, auth_1.auth)('admin'), Auth_controllers_1.AuthController.getAllUsers);
+router.patch('/users/:id', (0, auth_1.auth)(), Auth_controllers_1.AuthController.updateUser);
+router.delete('/users/:id', (0, auth_1.auth)(), Auth_controllers_1.AuthController.deleteUser);
+router.patch('/change-password', (0, auth_1.auth)(), Auth_controllers_1.AuthController.changePassword);
 exports.AuthRoutes = router;
