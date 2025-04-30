@@ -1,3 +1,4 @@
+
 // import swaggerJsdoc from "swagger-jsdoc";
 
 // const swaggerDefinition = {
@@ -19,28 +20,27 @@
 //   ],
 //   components: {
 //     securitySchemes: {
-//       AdminAuth: {
-//         type: "apiKey",
-//         in: "header",
-//         name: "Authorization",
-//       },
-//       // UserAuth: {
-//       //   type: "apiKey",
-//       //   in: "header",
-//       //   name: "Authorization",
-//       // },
-//     },
+//       bearerAuth: {
+//         type: "http",
+//         scheme: "Bearer",
+//         bearerFormat: "JWT",
+//         description: "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\""
+//       }
+//     }
 //   },
+//   security: [{
+//     bearerAuth: []
+//   }]
 // };
 
 // const apiPaths = process.env.NODE_ENV === 'production'
 //   ? [
-//       // In production, only look at compiled files
-//       "dist/app/module/**/*.routes.js", "dist/app/module/**/*.swagger.js"
+//       "dist/app/module/**/*.routes.js", 
+//       "dist/app/module/**/*.swagger.js"
 //     ]
 //   : [
-//       // In development, look at TypeScript files
-//        "src/app/module/**/*.routes.ts", "./src/app/module/**/*.swagger.ts"
+//       "src/app/module/**/*.routes.ts", 
+//       "src/app/module/**/*.swagger.ts"
 //     ];
 
 // const options = {
@@ -51,15 +51,14 @@
 // const swaggerSpec = swaggerJsdoc(options);
 
 // export default swaggerSpec;
-
 import swaggerJsdoc from "swagger-jsdoc";
 
 const swaggerDefinition = {
   openapi: "3.0.0",
   info: {
-    title: "HU-IAPAMS internal vacancy API",
+    title: "HU-IAPAMS Internal Vacancy API",
     version: "1.0.0",
-    description: "API documentation for HU-IAPAMS internal vacancy",
+    description: "API documentation for HU-IAPAMS internal vacancy management system.",
   },
   servers: [
     {
@@ -75,30 +74,32 @@ const swaggerDefinition = {
     securitySchemes: {
       bearerAuth: {
         type: "http",
-        scheme: "Bearer",
+        scheme: "bearer",  
         bearerFormat: "JWT",
-        description: "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\""
-      }
-    }
+        description: 'JWT Authorization header using the Bearer scheme. Example: "Authorization: Bearer {token}"',
+      },
+    },
   },
-  security: [{
-    bearerAuth: []
-  }]
+  security: [
+    {
+      bearerAuth: [],
+    },
+  ],
 };
 
-const apiPaths = process.env.NODE_ENV === 'production'
+const apiPaths = process.env.NODE_ENV === "production"
   ? [
-      "dist/app/module/**/*.routes.js", 
-      "dist/app/module/**/*.swagger.js"
+      "dist/app/module/**/*.routes.js",
+      "dist/app/module/**/*.swagger.js",
     ]
   : [
-      "src/app/module/**/*.routes.ts", 
-      "src/app/module/**/*.swagger.ts"
+      "src/app/module/**/*.routes.ts",
+      "src/app/module/**/*.swagger.ts",
     ];
 
 const options = {
-  swaggerDefinition,
-  apis: apiPaths
+  definition: swaggerDefinition, 
+  apis: apiPaths,
 };
 
 const swaggerSpec = swaggerJsdoc(options);

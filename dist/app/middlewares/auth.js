@@ -67,8 +67,8 @@ const JWT_REFRESH_SECRET = "1cIsp1tlnEIMs9CabFPeR5jJ15kiYTZ2LiYCPZUUPpc";
 const auth = (...requiredRoles) => {
     return (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            console.log('Incoming headers:', req.headers);
-            console.log('Authorization header:', req.headers.authorization);
+            // console.log('Incoming headers:', req.headers);
+            // console.log('Authorization header:', req.headers.authorization);
             const authHeader = req.headers.authorization;
             if (!authHeader) {
                 console.error('No authorization header found');
@@ -79,19 +79,19 @@ const auth = (...requiredRoles) => {
                 throw new ApiError_1.default(http_status_1.default.UNAUTHORIZED, 'Invalid token format');
             }
             const token = authHeader.split(' ')[1];
-            console.log('Extracted token:', token);
+            // console.log('Extracted token:', token);
             if (!token) {
                 console.error('Token missing after Bearer prefix');
                 throw new ApiError_1.default(http_status_1.default.UNAUTHORIZED, 'Please provide a valid token');
             }
             const verifiedUser = jsonwebtoken_1.default.verify(token, config_1.default.jwt_access_secret);
-            console.log('Verified user:', verifiedUser);
+            // console.log('Verified user:', verifiedUser);
             if (requiredRoles.length && !requiredRoles.includes(verifiedUser.role)) {
                 console.error(`Role check failed. Required: ${requiredRoles}, Found: ${verifiedUser.role}`);
                 throw new ApiError_1.default(http_status_1.default.FORBIDDEN, 'Forbidden');
             }
             req.user = verifiedUser;
-            console.log('Authentication successful');
+            // console.log('Authentication successful');
             next();
         }
         catch (error) {

@@ -77,8 +77,8 @@ declare global {
 export const auth = (...requiredRoles: string[]) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
-      console.log('Incoming headers:', req.headers);
-      console.log('Authorization header:', req.headers.authorization);
+      // console.log('Incoming headers:', req.headers);
+      // console.log('Authorization header:', req.headers.authorization);
 
       const authHeader = req.headers.authorization;
       
@@ -93,7 +93,7 @@ export const auth = (...requiredRoles: string[]) => {
       }
 
       const token = authHeader.split(' ')[1];
-      console.log('Extracted token:', token);
+      // console.log('Extracted token:', token);
 
       if (!token) {
         console.error('Token missing after Bearer prefix');
@@ -104,7 +104,7 @@ export const auth = (...requiredRoles: string[]) => {
         token,
         config.jwt_access_secret as string
       ) as ITokenPayload;
-      console.log('Verified user:', verifiedUser);
+      // console.log('Verified user:', verifiedUser);
 
       if (requiredRoles.length && !requiredRoles.includes(verifiedUser.role)) {
         console.error(
@@ -114,7 +114,7 @@ export const auth = (...requiredRoles: string[]) => {
       }
 
       req.user = verifiedUser;
-      console.log('Authentication successful');
+      // console.log('Authentication successful');
       next();
     } catch (error) {
       console.error('Authentication error:', error);
