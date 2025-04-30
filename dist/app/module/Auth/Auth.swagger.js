@@ -2,8 +2,8 @@
 /**
  * @swagger
  * tags:
- *   name: Authentication documentation
- *   description: Authentication endpoints
+ *   name: Auth
+ *   description: Authentication and user management
  */
 /**
  * @swagger

@@ -1,1 +1,11 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.EvaluationRoutes = void 0;
+const express_1 = require("express");
+const auth_1 = require("../../middlewares/auth");
+const Evaluation_controllers_1 = require("./Evaluation.controllers");
+const router = (0, express_1.Router)();
+router.post('/', (0, auth_1.auth)('evaluator'), Evaluation_controllers_1.EvaluationController.createEvaluation);
+router.patch('/:id', (0, auth_1.auth)('evaluator'), Evaluation_controllers_1.EvaluationController.submitEvaluation);
+router.get('/application/:id', (0, auth_1.auth)('admin', 'evaluator'), Evaluation_controllers_1.EvaluationController.getApplicationEvaluations);
+exports.EvaluationRoutes = router;
