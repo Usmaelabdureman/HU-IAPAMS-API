@@ -12,5 +12,8 @@ router.get('/users', auth('admin'), AuthController.getAllUsers);
 router.patch('/users/:id', auth(), AuthController.updateUser);
 router.delete('/users/:id', auth(), AuthController.deleteUser);
 router.patch('/change-password', auth(), AuthController.changePassword);
+router.post('/forgot-password', AuthController.forgotPassword);
+router.post('/reset-password', AuthController.resetPassword);
+router.get('/me', auth(), AuthController.getMe);
 
 export const AuthRoutes = router;

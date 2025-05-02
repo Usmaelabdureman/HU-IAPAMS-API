@@ -18,6 +18,7 @@ const Auth_services_1 = require("./Auth.services");
 const catchAsync_1 = __importDefault(require("../../shared/catchAsync"));
 const pick_1 = require("../../utils/pick");
 const paginationHelper_1 = require("../../utils/paginationHelper");
+const ApiError_1 = __importDefault(require("../../error/ApiError"));
 const register = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const userData = req.body;
     const result = yield Auth_services_1.AuthService.registerUser(userData);
@@ -104,6 +105,39 @@ const changePassword = (0, catchAsync_1.default)((req, res) => __awaiter(void 0,
         message: result.message
     });
 }));
+const forgotPassword = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { email } = req.body;
+    if (!email) {
+        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'Email is required');
+    }
+    const result = yield Auth_services_1.AuthService.forgotPassword(email);
+    res.status(http_status_1.default.OK).send({
+        success: true,
+        message: result.message
+    });
+}));
+const resetPassword = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { resetToken, newPassword } = req.body;
+    if (!resetToken || !newPassword) {
+        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'Reset token and new password are required');
+    }
+    const result = yield Auth_services_1.AuthService.resetPassword(resetToken, newPassword);
+    res.status(http_status_1.default.OK).send({
+        success: true,
+        message: result.message
+    });
+}));
+// get me
+const getMe = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.userId;
+    const result = yield Auth_services_1.AuthService.getMe(userId);
+    res.status(http_status_1.default.OK).send({
+        success: true,
+        message: 'User retrieved successfully',
+        data: result
+    });
+}));
 exports.AuthController = {
     register,
     login,
@@ -111,4 +145,7 @@ exports.AuthController = {
     updateUser,
     deleteUser,
     changePassword,
+    forgotPassword,
+    resetPassword,
+    getMe
 };

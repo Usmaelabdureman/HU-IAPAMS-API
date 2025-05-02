@@ -8,5 +8,9 @@ declare namespace NodeJS {
       JWT_REFRESH_SECRET: string;
       JWT_ACCESS_EXPIRES_IN: string;
       JWT_REFRESH_EXPIRES_IN: string;
+      EMAIL_HOST: string;
+      EMAIL_PORT: number;
+      EMAIL_USER: string;
+      EMAIL_PASS: string;
     }
   }

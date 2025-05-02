@@ -15,4 +15,11 @@ exports.default = {
     jwt_refresh_secret: process.env.JWT_REFRESH_SECRET || "1cIsp1tlnEIMs9CabFPeR5jJ15kiYTZ2LiYCPZUUPpc",
     jwt_access_expires_in: process.env.JWT_ACCESS_EXPIRES_IN || '1h',
     jwt_refresh_expires_in: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
+    email_host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+    email_port: process.env.EMAIL_PORT || 587,
+    email_user: process.env.EMAIL_USER || 'drmteam.sup@gmail.com',
+    email_pass: process.env.EMAIL_PASS || 'ghkt efru hmgw yjgm',
+    email_from_name: process.env.EMAIL_FROM_NAME || 'Haramaya University HRMS',
+    reset_password_expire: process.env.RESET_PASSWORD_EXPIRE || 10,
+    client_url: process.env.CLIENT_URL || 'https://hu-iapms.vercel.app/',
 };

@@ -12,7 +12,14 @@ export interface IUser extends Document {
   lastLogin?: Date;
   createdAt: Date;
   updatedAt: Date;
+  phone?: string;
+  address?: string;
+  department?: string;
+  positionType?: string;
+  resetPasswordToken?: string;
+  resetPasswordExpires?: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
+
 }
 
 const userSchema = new Schema<IUser>(
@@ -27,7 +34,13 @@ const userSchema = new Schema<IUser>(
     },
     fullName: { type: String, required: function() { return this.role === 'applicant'; } },
     status: { type: String, enum: ['active', 'inactive'], default: 'active' },
-    lastLogin: { type: Date }
+    lastLogin: { type: Date },
+    phone: { type: String },
+    address: { type: String },
+    department: { type: String },
+    positionType: { type: String },
+    resetPasswordToken: { type: String, select: false },
+    resetPasswordExpires: { type: Date , select: false },
   },
   { timestamps: true }
 );

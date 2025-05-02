@@ -7,8 +7,17 @@ export interface ILoginRequest {
     username: string;
     email: string;
     password: string;
-    role: 'admin' | 'applicant' | 'evaluator';
+    role: 'admin' | 'staff' | 'evaluator';
     fullName?: string;
+    department?: string;
+    positionType?: string;
+    status?: 'active' | 'inactive';
+
+    phone?: string;
+    address?: string;
+
+    resetPasswordToken?: string;
+    resetPasswordExpires?: Date;
   }
   
   export interface IAuthResponse {

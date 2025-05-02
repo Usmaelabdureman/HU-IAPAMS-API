@@ -18,6 +18,8 @@ const ApiError_1 = __importDefault(require("../../error/ApiError"));
 const http_status_1 = __importDefault(require("http-status"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const config_1 = __importDefault(require("../../config"));
+const crypto_1 = __importDefault(require("crypto"));
+const emailService_1 = require("../../shared/emailService");
 const generateAuthTokens = (user) => __awaiter(void 0, void 0, void 0, function* () {
     const payload = {
         userId: user._id.toString(),
@@ -153,9 +155,19 @@ const deleteUser = (userId, requesterId, requesterRole) => __awaiter(void 0, voi
         throw new ApiError_1.default(http_status_1.default.FORBIDDEN, 'Not authorized to delete this user');
     }
     // Soft delete
-    user.status = 'inactive';
-    yield user.save();
-    return { message: 'User deactivated successfully' };
+    // user.status = 'inactive';
+    // await user.save();
+    yield user.deleteOne();
+    return { message: 'User deleted successfully' };
+});
+// permanently delete user
+const permanentlyDeleteUser = (userId) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = yield Auth_models_1.User.findById(userId);
+    if (!user) {
+        throw new ApiError_1.default(http_status_1.default.NOT_FOUND, 'User not found');
+    }
+    yield user.deleteOne();
+    return { message: 'User deleted successfully' };
 });
 const changePassword = (userId, currentPassword, newPassword) => __awaiter(void 0, void 0, void 0, function* () {
     const user = yield Auth_models_1.User.findById(userId).select('+password');
@@ -169,6 +181,60 @@ const changePassword = (userId, currentPassword, newPassword) => __awaiter(void 
     yield user.save();
     return { message: 'Password changed successfully' };
 });
+const forgotPassword = (email) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = yield Auth_models_1.User.findOne({ email });
+    if (!user) {
+        throw new ApiError_1.default(http_status_1.default.NOT_FOUND, 'User not found with this email');
+    }
+    // Generate reset token
+    const resetToken = crypto_1.default.randomBytes(20).toString('hex');
+    // Hash token and set to resetPasswordToken field
+    user.resetPasswordToken = crypto_1.default
+        .createHash('sha256')
+        .update(resetToken)
+        .digest('hex');
+    user.resetPasswordExpires = new Date(Date.now() + Number(config_1.default.reset_password_expire) * 60 * 1000);
+    yield user.save({ validateBeforeSave: false });
+    const resetUrl = `${config_1.default.client_url}/reset-password/${resetToken}`;
+    try {
+        yield (0, emailService_1.sendPasswordResetEmail)(user, resetUrl);
+        return { message: 'Password reset email sent successfully' };
+    }
+    catch (error) {
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpires = undefined;
+        yield user.save({ validateBeforeSave: false });
+        throw new ApiError_1.default(http_status_1.default.INTERNAL_SERVER_ERROR, 'There was an error sending the email. Please try again later.');
+    }
+});
+const resetPassword = (resetToken, newPassword) => __awaiter(void 0, void 0, void 0, function* () {
+    // Hash token to compare with what's in DB
+    const hashedToken = crypto_1.default
+        .createHash('sha256')
+        .update(resetToken)
+        .digest('hex');
+    const user = yield Auth_models_1.User.findOne({
+        resetPasswordToken: hashedToken,
+        resetPasswordExpire: { $gt: Date.now() }
+    });
+    if (!user) {
+        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'Password reset token is invalid or has expired');
+    }
+    // Set new password
+    user.password = newPassword;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    yield user.save();
+    return { message: 'Password reset successfully' };
+});
+//  get me 
+const getMe = (userId) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = yield Auth_models_1.User.findById(userId).select('-password');
+    if (!user) {
+        throw new ApiError_1.default(http_status_1.default.NOT_FOUND, 'User not found');
+    }
+    return user;
+});
 exports.AuthService = {
     registerUser,
     loginUser,
@@ -177,4 +243,8 @@ exports.AuthService = {
     updateUser,
     deleteUser,
     changePassword,
+    forgotPassword,
+    resetPassword,
+    getMe,
+    permanentlyDeleteUser
 };

@@ -12,4 +12,7 @@ router.get('/users', (0, auth_1.auth)('admin'), Auth_controllers_1.AuthControlle
 router.patch('/users/:id', (0, auth_1.auth)(), Auth_controllers_1.AuthController.updateUser);
 router.delete('/users/:id', (0, auth_1.auth)(), Auth_controllers_1.AuthController.deleteUser);
 router.patch('/change-password', (0, auth_1.auth)(), Auth_controllers_1.AuthController.changePassword);
+router.post('/forgot-password', Auth_controllers_1.AuthController.forgotPassword);
+router.post('/reset-password', Auth_controllers_1.AuthController.resetPassword);
+router.get('/me', (0, auth_1.auth)(), Auth_controllers_1.AuthController.getMe);
 exports.AuthRoutes = router;

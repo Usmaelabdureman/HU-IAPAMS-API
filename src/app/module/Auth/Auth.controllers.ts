@@ -5,6 +5,8 @@ import { ILoginRequest, IRegisterRequest } from './Auth.interfaces';
 import catchAsync from '../../shared/catchAsync';
 import { pick } from '../../utils/pick';
 import { paginationFields } from '../../utils/paginationHelper';
+import ApiError from '../../error/ApiError';
+import { get } from 'http';
 
 
 const register = catchAsync(async (req: Request, res: Response) => {
@@ -110,6 +112,47 @@ const changePassword = catchAsync(async (req: Request, res: Response) => {
 });
 
 
+const forgotPassword = catchAsync(async (req: Request, res: Response) => {
+  const { email } = req.body;
+  
+  if (!email) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Email is required');
+  }
+
+  const result = await AuthService.forgotPassword(email);
+
+  res.status(httpStatus.OK).send({
+    success: true,
+    message: result.message
+  });
+});
+
+const resetPassword = catchAsync(async (req: Request, res: Response) => {
+  const { resetToken, newPassword } = req.body;
+
+  if (!resetToken || !newPassword) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Reset token and new password are required');
+  }
+
+  const result = await AuthService.resetPassword(resetToken, newPassword);
+
+  res.status(httpStatus.OK).send({
+    success: true,
+    message: result.message
+  });
+});
+
+// get me
+const getMe = catchAsync(async (req: Request, res: Response) => {
+  const userId = req.user?.userId;
+  const result = await AuthService.getMe(userId!);
+
+  res.status(httpStatus.OK).send({
+    success: true,
+    message: 'User retrieved successfully',
+    data: result
+  });
+});
 export const AuthController = {
   register,
   login,
@@ -117,4 +160,7 @@ export const AuthController = {
   updateUser,
   deleteUser,
   changePassword,
+  forgotPassword,
+  resetPassword,
+  getMe
 };

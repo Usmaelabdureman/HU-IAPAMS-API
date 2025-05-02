@@ -4,6 +4,8 @@ import ApiError from '../../error/ApiError';
 import httpStatus from 'http-status';
 import jwt, { SignOptions } from 'jsonwebtoken';
 import config from '../../config';
+import crypto from 'crypto';
+import { sendPasswordResetEmail } from '../../shared/emailService';
 
 interface ITokenPayload {
   userId: string;
@@ -202,11 +204,24 @@ const deleteUser = async (
   }
 
   // Soft delete
-  user.status = 'inactive';
-  await user.save();
+  // user.status = 'inactive';
+  // await user.save();
+  await user.deleteOne();
 
-  return { message: 'User deactivated successfully' };
+  return { message: 'User deleted successfully' };
 };
+
+// permanently delete user
+const permanentlyDeleteUser = async (userId: string): Promise<{ message: string }> => {
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+  }
+  
+  await user.deleteOne();
+  return { message: 'User deleted successfully' };
+}
+
 
 const changePassword = async (
   userId: string,
@@ -230,6 +245,81 @@ const changePassword = async (
 
 
 
+const forgotPassword = async (email: string): Promise<{ message: string }> => {
+  const user = await User.findOne({ email });
+  if (!user) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'User not found with this email');
+  }
+
+  // Generate reset token
+  const resetToken = crypto.randomBytes(20).toString('hex');
+  
+  // Hash token and set to resetPasswordToken field
+  user.resetPasswordToken = crypto
+    .createHash('sha256')
+    .update(resetToken)
+    .digest('hex');
+
+  user.resetPasswordExpires = new Date(Date.now() + Number(config.reset_password_expire) * 60 * 1000);
+
+  await user.save({ validateBeforeSave: false });
+
+  const resetUrl = `${config.client_url}/reset-password/${resetToken}`;
+
+  try {
+    await sendPasswordResetEmail(user, resetUrl);
+    return { message: 'Password reset email sent successfully' };
+  } catch (error) {
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save({ validateBeforeSave: false });
+
+    throw new ApiError(
+      httpStatus.INTERNAL_SERVER_ERROR,
+      'There was an error sending the email. Please try again later.'
+    );
+  }
+};
+
+const resetPassword = async (resetToken: string, newPassword: string): Promise<{ message: string }> => {
+  // Hash token to compare with what's in DB
+  const hashedToken = crypto
+    .createHash('sha256')
+    .update(resetToken)
+    .digest('hex');
+
+  const user = await User.findOne({
+    resetPasswordToken: hashedToken,
+    resetPasswordExpire: { $gt: Date.now() }
+  });
+
+  if (!user) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Password reset token is invalid or has expired');
+  }
+
+  // Set new password
+  user.password = newPassword;
+  user.resetPasswordToken = undefined;
+  user.resetPasswordExpires = undefined;
+
+  await user.save();
+
+  return { message: 'Password reset successfully' };
+};
+
+
+//  get me 
+
+const getMe = async (userId: string): Promise<any> => {
+  const user = await User.findById(userId).select('-password');
+  if (!user) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+  }
+  return user;
+}
+
+
+
 export const AuthService = {
   registerUser,
   loginUser,
@@ -238,4 +328,8 @@ export const AuthService = {
   updateUser,
   deleteUser,
   changePassword,
+  forgotPassword,
+  resetPassword,
+  getMe,
+  permanentlyDeleteUser
 };
