@@ -6,8 +6,8 @@ export interface IUser extends Document {
   username: string;
   email: string;
   password: string;
-  role: 'admin' | 'applicant' | 'evaluator';
-  fullName?: string; // Only for applicants
+  role: 'admin' | 'staff' | 'evaluator';
+  fullName?: string; 
   status?: 'active' | 'inactive'; // Account status
   lastLogin?: Date;
   createdAt: Date;
@@ -30,9 +30,9 @@ const userSchema = new Schema<IUser>(
     role: { 
       type: String, 
       required: true, 
-      enum: ['admin', 'applicant', 'evaluator'] 
+      enum: ['admin', 'staff', 'evaluator'] 
     },
-    fullName: { type: String, required: function() { return this.role === 'applicant'; } },
+    fullName: { type: String, required: function() { return this.role === 'staff'; } },
     status: { type: String, enum: ['active', 'inactive'], default: 'active' },
     lastLogin: { type: Date },
     phone: { type: String },

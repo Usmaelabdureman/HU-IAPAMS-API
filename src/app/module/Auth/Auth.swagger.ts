@@ -35,7 +35,7 @@
  *                 minLength: 8
  *               role:
  *                 type: string
- *                 enum: [admin, applicant, evaluator]
+ *                 enum: [admin, staff, evaluator]
  *               fullName:
  *                 type: string
  *                 required: false
@@ -91,7 +91,7 @@
  *           example: johndoe@example.com
  *         role:
  *           type: string
- *           enum: [admin, applicant, evaluator]
+ *           enum: [admin, staff, evaluator]
  *         fullName:
  *           type: string
  *           example: John Doe
@@ -142,7 +142,7 @@
  *         name: role
  *         schema:
  *           type: string
- *           enum: [admin, applicant, evaluator]
+ *           enum: [admin, staff, evaluator]
  *         description: Filter by role
  *     responses:
  *       200:

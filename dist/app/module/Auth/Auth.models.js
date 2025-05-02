@@ -56,9 +56,9 @@ const userSchema = new mongoose_1.Schema({
     role: {
         type: String,
         required: true,
-        enum: ['admin', 'applicant', 'evaluator']
+        enum: ['admin', 'staff', 'evaluator']
     },
-    fullName: { type: String, required: function () { return this.role === 'applicant'; } },
+    fullName: { type: String, required: function () { return this.role === 'staff'; } },
     status: { type: String, enum: ['active', 'inactive'], default: 'active' },
     lastLogin: { type: Date },
     phone: { type: String },

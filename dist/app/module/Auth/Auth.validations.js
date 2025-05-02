@@ -7,7 +7,7 @@ const registerValidation = zod_1.z.object({
         username: zod_1.z.string().min(3).max(20),
         email: zod_1.z.string().email(),
         password: zod_1.z.string().min(8).regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/, 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'),
-        role: zod_1.z.enum(['admin', 'applicant', 'evaluator']),
+        role: zod_1.z.enum(['admin', 'staff', 'evaluator']),
         fullName: zod_1.z.string().min(1).max(50).optional()
     })
 });

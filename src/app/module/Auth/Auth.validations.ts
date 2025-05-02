@@ -8,7 +8,7 @@ const registerValidation = z.object({
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
       'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'
     ),
-    role: z.enum(['admin', 'applicant', 'evaluator']),
+    role: z.enum(['admin', 'staff', 'evaluator']),
     fullName: z.string().min(1).max(50).optional()
   })
 });
