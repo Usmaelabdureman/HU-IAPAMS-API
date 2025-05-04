@@ -127,6 +127,7 @@ const resetPassword = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, 
         message: result.message
     });
 }));
+// permanently delete user
 // get me
 const getMe = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;

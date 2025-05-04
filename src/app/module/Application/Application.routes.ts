@@ -4,8 +4,8 @@ import { ApplicationController } from "../Application/Application.controllers";
 
 const router = Router( );
 
-router.post('/', auth('applicant'), ApplicationController.applyToPosition);
+router.post('/', auth('staff','evaluator'), ApplicationController.applyToPosition);
 router.get('/', auth('applicant', 'evaluator', 'admin'), ApplicationController.getApplications);
-router.patch('/:id/withdraw', auth('applicant'), ApplicationController.withdrawApplication);
+router.patch('/:id/withdraw', auth('staff','evaluator'), ApplicationController.withdrawApplication);
 
 export const ApplicationRoutes = router;

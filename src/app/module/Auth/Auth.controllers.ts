@@ -142,6 +142,9 @@ const resetPassword = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+// permanently delete user
+
+
 // get me
 const getMe = catchAsync(async (req: Request, res: Response) => {
   const userId = req.user?.userId;
