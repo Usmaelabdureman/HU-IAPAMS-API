@@ -20,7 +20,7 @@ const applyToPosition = async (applicationData: IApplication) => {
 const getApplications = async (userId: string, role: string, filters: any) => {
   let query: any = {};
 
-  if (role === 'applicant') {
+  if (role === 'staff') {
     query.applicant = userId;
   } else if (role === 'evaluator') {
     query.status = ApplicationStatus.UNDER_REVIEW;

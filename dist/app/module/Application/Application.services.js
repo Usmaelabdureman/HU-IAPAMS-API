@@ -30,7 +30,7 @@ const applyToPosition = (applicationData) => __awaiter(void 0, void 0, void 0, f
 });
 const getApplications = (userId, role, filters) => __awaiter(void 0, void 0, void 0, function* () {
     let query = {};
-    if (role === 'applicant') {
+    if (role === 'staff') {
         query.applicant = userId;
     }
     else if (role === 'evaluator') {
