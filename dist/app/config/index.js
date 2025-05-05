@@ -22,4 +22,6 @@ exports.default = {
     email_from_name: process.env.EMAIL_FROM_NAME || 'Haramaya University HRMS',
     reset_password_expire: process.env.RESET_PASSWORD_EXPIRE || 10,
     client_url: process.env.CLIENT_URL || 'https://hu-iapms.vercel.app/',
+    supabase_url: process.env.SUPABASE_URL,
+    supabase_anon_key: process.env.SUPABASE_ANON_KEY,
 };

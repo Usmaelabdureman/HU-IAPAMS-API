@@ -1,11 +1,12 @@
 import { User } from './Auth.models';
-import { ILoginRequest, IRegisterRequest, IAuthResponse, IUpdateUserRequest } from './Auth.interfaces';
+import { ILoginRequest, IRegisterRequest, IAuthResponse, IUpdateUserRequest, IEducation, IExperience, ISkill } from './Auth.interfaces';
 import ApiError from '../../error/ApiError';
 import httpStatus from 'http-status';
 import jwt, { SignOptions } from 'jsonwebtoken';
 import config from '../../config';
 import crypto from 'crypto';
 import { sendPasswordResetEmail } from '../../shared/emailService';
+import { supabase } from '../../utils/supabase';
 
 interface ITokenPayload {
   userId: string;
@@ -41,6 +42,93 @@ const accessToken = jwt.sign(
   return { accessToken, refreshToken };
 };
 
+
+// Add this helper function
+const uploadProfilePhoto = async (file: Express.Multer.File, userId: string) => {
+  try {
+    const fileExt = file.originalname.split('.').pop();
+    const fileName = `${userId}-profile-${Date.now()}.${fileExt}`;
+    const filePath = `profile-photos/${userId}/${fileName}`;
+
+    const { data, error } = await supabase.storage
+      .from('profile-photos')
+      .upload(filePath, file.buffer, {
+        contentType: file.mimetype,
+        upsert: true
+      });
+
+    if (error) {
+      console.error('Supabase upload error:', error);
+      throw new Error(`Profile photo upload failed: ${error.message}`);
+    }
+
+    // Get public URL
+    const { data: { publicUrl } } = supabase.storage
+      .from('profile-photos')
+      .getPublicUrl(data.path);
+
+    return publicUrl;
+  } catch (err) {
+    console.error('Profile photo upload error:', err);
+    throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Profile photo upload failed');
+  }
+};
+
+// Update the updateUser function
+const updateUser = async (
+  userId: string,
+  updateData: IUpdateUserRequest,
+  requesterId: string,
+  requesterRole: string,
+  profilePhoto?: Express.Multer.File
+): Promise<any> => {
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+  }
+
+  // Only allow users to update their own profile or admins to update any profile
+  // if (requesterRole !== 'admin' && requesterId !== userId) {
+  //   throw new ApiError(httpStatus.FORBIDDEN, 'Not authorized to update this user');
+  // }
+
+  // Handle profile photo upload
+  if (profilePhoto) {
+    const photoUrl = await uploadProfilePhoto(profilePhoto, userId);
+    updateData.profilePhoto = photoUrl;
+  }
+
+  // Handle array updates (education, experience, skills)
+  if (updateData.education) {
+    user.education = updateData.education as unknown as typeof user.education;
+    delete updateData.education;
+  }
+
+  if (updateData.experience) {
+    user.experience = updateData.experience as unknown as typeof user.experience;
+    delete updateData.experience;
+  }
+
+  if (updateData.skills) {
+    user.skills = updateData.skills as unknown as typeof user.skills;
+    delete updateData.skills;
+  }
+
+  // Prevent role modification for non-admins
+  // if (updateData.role && requesterRole !== 'admin') {
+  //   throw new ApiError(httpStatus.FORBIDDEN, 'Only admins can modify roles');
+  // }
+
+  // Prevent status modification for non-admins
+  // if (updateData.status && requesterRole !== 'admin') {
+  //   throw new ApiError(httpStatus.FORBIDDEN, 'Only admins can modify status');
+  // }
+
+  Object.assign(user, updateData);
+  await user.save();
+
+  return user;
+};
 const registerUser = async (userData: IRegisterRequest): Promise<IAuthResponse> => {
   const existingUser = await User.findOne({ 
     $or: [
@@ -62,7 +150,21 @@ const registerUser = async (userData: IRegisterRequest): Promise<IAuthResponse> 
       username: user.username,
       email: user.email,
       role: user.role,
-      fullName: user.fullName
+      fullName: user.fullName,
+      department: user.department,
+      positionType: user.positionType,
+      status: user.status,
+      lastLogin: user.lastLogin,
+      phone: user.phone,
+      address: user.address,
+      profilePhoto: user.profilePhoto,
+      bio: user.bio,
+      education: user.education ? (user.education as unknown as IEducation[]) : undefined,
+      experience: user.experience ? (user.experience as unknown as IExperience[]) : undefined,
+      skills: user.skills ? (user.skills as unknown as ISkill[]) : undefined,
+      socialMedia: user.socialMedia,
+      website: user.website
+
     },
     tokens
   };
@@ -91,7 +193,19 @@ const loginUser = async (loginData: ILoginRequest): Promise<IAuthResponse> => {
       username: user.username,
       email: user.email,
       role: user.role,
-      fullName: user.fullName
+      fullName: user.fullName,
+      department: user.department,
+      positionType: user.positionType,
+      status: user.status,
+      lastLogin: user.lastLogin,
+      phone: user.phone,
+      address: user.address,
+      profilePhoto: user.profilePhoto,
+      bio: user.bio,
+      education: user.education ? (user.education as unknown as IEducation[]) : undefined,
+      experience: user.experience ? (user.experience as unknown as IExperience[]) : undefined,
+      skills: user.skills ? (user.skills as unknown as ISkill[]) : undefined,
+      socialMedia: user.socialMedia,
     },
     tokens
   };
@@ -141,53 +255,53 @@ const getAllUsers = async (
 };
 
 
-const updateUser = async (
-  userId: string,
-  updateData: IUpdateUserRequest,
-  requesterId: string,
-  requesterRole: string
-): Promise<any> => {
-  const user = await User.findById(userId);
-  if (!user) {
-    throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
-  }
+// const updateUser = async (
+//   userId: string,
+//   updateData: IUpdateUserRequest,
+//   requesterId: string,
+//   requesterRole: string
+// ): Promise<any> => {
+//   const user = await User.findById(userId);
+//   if (!user) {
+//     throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+//   }
 
  
-  if (requesterRole !== 'admin' && requesterId !== userId) {
-    throw new ApiError(httpStatus.FORBIDDEN, 'Not authorized to update this user');
-  }
+//   if (requesterRole !== 'admin' && requesterId !== userId) {
+//     throw new ApiError(httpStatus.FORBIDDEN, 'Not authorized to update this user');
+//   }
 
-  if (updateData.email || updateData.username) {
-    const existingUser = await User.findOne({
-      $or: [
-        { email: updateData.email },
-        { username: updateData.username }
-      ],
-      _id: { $ne: userId }
-    });
+//   if (updateData.email || updateData.username) {
+//     const existingUser = await User.findOne({
+//       $or: [
+//         { email: updateData.email },
+//         { username: updateData.username }
+//       ],
+//       _id: { $ne: userId }
+//     });
 
-    if (existingUser) {
-      throw new ApiError(httpStatus.CONFLICT, 'Email or username already exists');
-    }
-  }
+//     if (existingUser) {
+//       throw new ApiError(httpStatus.CONFLICT, 'Email or username already exists');
+//     }
+//   }
 
-  // Prevent role modification for non-admins
-  if (updateData.role && requesterRole !== 'admin') {
-    throw new ApiError(httpStatus.FORBIDDEN, 'Only admins can modify roles');
-  }
+//   // Prevent role modification for non-admins
+//   if (updateData.role && requesterRole !== 'admin') {
+//     throw new ApiError(httpStatus.FORBIDDEN, 'Only admins can modify roles');
+//   }
 
-  Object.assign(user, updateData);
-  await user.save();
+//   Object.assign(user, updateData);
+//   await user.save();
 
-  return {
-    _id: user.id.toString(),
-    username: user.username,
-    email: user.email,
-    role: user.role,
-    fullName: user.fullName,
-    status: user.status
-  };
-};
+//   return {
+//     _id: user.id.toString(),
+//     username: user.username,
+//     email: user.email,
+//     role: user.role,
+//     fullName: user.fullName,
+//     status: user.status
+//   };
+// };
 
 const deleteUser = async (
   userId: string,

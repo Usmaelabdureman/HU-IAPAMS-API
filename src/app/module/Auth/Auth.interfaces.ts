@@ -27,6 +27,20 @@ export interface ILoginRequest {
       email: string;
       role: string;
       fullName?: string;
+      status?: 'active' | 'inactive';
+      lastLogin?: Date;
+      phone?: string;
+      address?: string;
+      department?: string;
+      positionType?: string;
+      profilePhoto?: string;
+      bio?: string;
+      education?: IEducation[];
+      experience?: IExperience[];
+      skills?: ISkill[];
+      socialMedia?: ISocialMedia;
+      website?: string;
+      
     };
     tokens: {
       accessToken: string;
@@ -43,13 +57,55 @@ export interface ILoginRequest {
   export interface JwtPayload {
     userId:string;
   }
+
+  
+  export interface IEducation {
+    institution: string;
+    degree: string;
+    fieldOfStudy?: string;
+    startYear: number;
+    endYear?: number;
+    description?: string;
+  }
+  
+  export interface IExperience {
+    company: string;
+    position: string;
+    startDate: Date;
+    endDate?: Date;
+    current?: boolean;
+    description?: string;
+  }
+  
+  export interface ISkill {
+    name: string;
+    level: 'beginner' | 'intermediate' | 'advanced' | 'expert';
+  }
+  
+  export interface ISocialMedia {
+    linkedIn?: string;
+    twitter?: string;
+    github?: string;
+  }
+  
   export interface IUpdateUserRequest {
-    role: boolean;
     username?: string;
     email?: string;
     fullName?: string;
+    phone?: string;
+    address?: string;
     department?: string;
     positionType?: string;
+    bio?: string;
+    education?: IEducation[];
+    experience?: IExperience[];
+    skills?: ISkill[];
+    socialMedia?: ISocialMedia;
+    website?: string;
+    role?: 'admin' | 'staff' | 'evaluator';
     status?: 'active' | 'inactive';
+    profilePhoto?: string;
+    resetPasswordToken?: string;
+    resetPasswordExpires?: Date;
+
   }
-  

@@ -6,7 +6,6 @@ import catchAsync from '../../shared/catchAsync';
 import { pick } from '../../utils/pick';
 import { paginationFields } from '../../utils/paginationHelper';
 import ApiError from '../../error/ApiError';
-import { get } from 'http';
 
 
 const register = catchAsync(async (req: Request, res: Response) => {
@@ -54,7 +53,6 @@ const updateUser = catchAsync(async (req: Request, res: Response) :Promise<void>
   const { id } = req.params;
   const updateData = req.body;
   const requesterId = req.user?.userId;
-  const requesterRole = req.user?.role;
 
   if (!id) {
     res.status(httpStatus.BAD_REQUEST).send({
@@ -69,7 +67,13 @@ const updateUser = catchAsync(async (req: Request, res: Response) :Promise<void>
   if (!id) {
     throw new Error('User ID is required');
   }
-  const result = await AuthService.updateUser(id, updateData, requesterId!, requesterRole!);
+  const result = await AuthService.updateUser( 
+    req.params.userId, 
+    req.body,
+    req.user?.userId!,  
+    req.user?.role!,   
+    req.file  
+  );
 
   res.status(httpStatus.OK).send({
     success: true,
@@ -142,8 +146,6 @@ const resetPassword = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-// permanently delete user
-
 
 // get me
 const getMe = catchAsync(async (req: Request, res: Response) => {
@@ -156,6 +158,45 @@ const getMe = catchAsync(async (req: Request, res: Response) => {
     data: result
   });
 });
+
+
+const updateProfile = catchAsync(async (req: Request, res: Response) => {
+  const updateData = req.body;
+  // log users data
+  console.log('User data:', updateData);
+  // log user id
+  console.log('User ID:', req.params.id);
+  // log user role
+  console.log('User role:', req.user?.role);
+  // log user file
+  console.log('User file:', req.file);
+  
+
+  if (typeof updateData.education === 'string') {
+    updateData.education = JSON.parse(updateData.education);
+  }
+  if (typeof updateData.experience === 'string') {
+    updateData.experience = JSON.parse(updateData.experience);
+  }
+  if (typeof updateData.skills === 'string') {
+    updateData.skills = JSON.parse(updateData.skills);
+  }
+
+  const updatedUser = await AuthService.updateUser(
+    req.params.id, 
+    req.body,
+    req.user?.userId!,    
+    req.user?.role!,   
+    req.file  
+  );
+
+  res.status(httpStatus.OK).send({
+    success: true,
+    data: updatedUser
+  });
+});
+
+
 export const AuthController = {
   register,
   login,
@@ -165,5 +206,6 @@ export const AuthController = {
   changePassword,
   forgotPassword,
   resetPassword,
-  getMe
+  getMe,
+  updateProfile
 };

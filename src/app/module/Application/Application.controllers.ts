@@ -5,12 +5,28 @@ import { IApplication } from './Application.interfaces';
 import catchAsync from '../../shared/catchAsync';
 
 const applyToPosition = catchAsync(async (req: Request, res: Response) => {
-  const applicationData: IApplication = {
-    ...req.body,
-    applicant: req.user?.userId
+  // const applicationData: IApplication = {
+  //   ...req.body,
+  //   applicant: req.user?.userId
+  // };
+  const applicationData = req.body;
+  const files = req.files as {
+    cv: Express.Multer.File[];
+    coverLetter?: Express.Multer.File[];
+    certificates?: Express.Multer.File[];
   };
+
+  console.log('applicationData', applicationData);
+  console.log('files', files);
+  //user id is coming from the token
+  console.log('userId', req.user?.userId); 
   
-  const result = await ApplicationService.applyToPosition(applicationData);
+  // const result = await ApplicationService.applyToPosition(applicationData);
+  const result = await ApplicationService.applyToPosition(
+    applicationData,
+    files,
+    req.user?.userId!
+  );
   
   res.status(httpStatus.CREATED).json({
     success: true,

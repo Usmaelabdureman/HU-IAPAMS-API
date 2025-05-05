@@ -52,11 +52,10 @@ const getAllUsers = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, vo
 }));
 // Auth.controller.ts
 const updateUser = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b;
+    var _a, _b, _c;
     const { id } = req.params;
     const updateData = req.body;
     const requesterId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.userId;
-    const requesterRole = (_b = req.user) === null || _b === void 0 ? void 0 : _b.role;
     if (!id) {
         res.status(http_status_1.default.BAD_REQUEST).send({
             success: false,
@@ -70,7 +69,7 @@ const updateUser = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, voi
     if (!id) {
         throw new Error('User ID is required');
     }
-    const result = yield Auth_services_1.AuthService.updateUser(id, updateData, requesterId, requesterRole);
+    const result = yield Auth_services_1.AuthService.updateUser(req.params.userId, req.body, (_b = req.user) === null || _b === void 0 ? void 0 : _b.userId, (_c = req.user) === null || _c === void 0 ? void 0 : _c.role, req.file);
     res.status(http_status_1.default.OK).send({
         success: true,
         message: 'User updated successfully',
@@ -127,7 +126,6 @@ const resetPassword = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, 
         message: result.message
     });
 }));
-// permanently delete user
 // get me
 const getMe = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
@@ -139,6 +137,32 @@ const getMe = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, 
         data: result
     });
 }));
+const updateProfile = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b, _c;
+    const updateData = req.body;
+    // log users data
+    console.log('User data:', updateData);
+    // log user id
+    console.log('User ID:', req.params.id);
+    // log user role
+    console.log('User role:', (_a = req.user) === null || _a === void 0 ? void 0 : _a.role);
+    // log user file
+    console.log('User file:', req.file);
+    if (typeof updateData.education === 'string') {
+        updateData.education = JSON.parse(updateData.education);
+    }
+    if (typeof updateData.experience === 'string') {
+        updateData.experience = JSON.parse(updateData.experience);
+    }
+    if (typeof updateData.skills === 'string') {
+        updateData.skills = JSON.parse(updateData.skills);
+    }
+    const updatedUser = yield Auth_services_1.AuthService.updateUser(req.params.id, req.body, (_b = req.user) === null || _b === void 0 ? void 0 : _b.userId, (_c = req.user) === null || _c === void 0 ? void 0 : _c.role, req.file);
+    res.status(http_status_1.default.OK).send({
+        success: true,
+        data: updatedUser
+    });
+}));
 exports.AuthController = {
     register,
     login,
@@ -148,5 +172,6 @@ exports.AuthController = {
     changePassword,
     forgotPassword,
     resetPassword,
-    getMe
+    getMe,
+    updateProfile
 };

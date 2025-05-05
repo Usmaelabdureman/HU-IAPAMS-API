@@ -12,5 +12,7 @@ declare namespace NodeJS {
       EMAIL_PORT: number;
       EMAIL_USER: string;
       EMAIL_PASS: string;
+      SUPABASE_URL: string;
+      SUPABASE_ANON_KEY: string;
     }
   }

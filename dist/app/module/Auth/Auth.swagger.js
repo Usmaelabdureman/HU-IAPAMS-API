@@ -173,7 +173,7 @@
  * @swagger
  * /auth/users/{id}:
  *   patch:
- *     summary: Update user details
+ *     summary: Update user details (admin or self)
  *     tags: [Auth]
  *     security:
  *       - bearerAuth: []
@@ -183,30 +183,123 @@
  *         required: true
  *         schema:
  *           type: string
- *         description: User ID
+ *         description: User ID to update
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             properties:
- *               username:
+ *               profilePhoto:
  *                 type: string
- *                 minLength: 3
- *                 maxLength: 20
- *               email:
- *                 type: string
- *                 format: email
+ *                 format: binary
+ *                 description: Profile photo image file (JPEG/PNG, max 2MB)
  *               fullName:
  *                 type: string
+ *                 example: Usmael Abdi
+ *               phone:
+ *                 type: string
+ *                 example: "+251987654321"
+ *               address:
+ *                 type: string
+ *                 example: "Addis Ababa, Ethiopia"
  *               department:
  *                 type: string
+ *                 example: "Software"
  *               positionType:
  *                 type: string
+ *                 example: "Lead Engineer"
+ *               bio:
+ *                 type: string
+ *                 example: "Full-stack developer with 5+ years of experience."
+ *               website:
+ *                 type: string
+ *                 example: "https://usmael.live"
  *               status:
  *                 type: string
  *                 enum: [active, inactive]
+ *                 description: Admin only field
+ *               role:
+ *                 type: string
+ *                 enum: [admin, staff, evaluator]
+ *                 description: Admin only field
+ *               education:
+ *                 type: array
+ *                 description: Optional - provide one or more education records
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     institution:
+ *                       type: string
+ *                       example: "Addis Ababa University"
+ *                     degree:
+ *                       type: string
+ *                       example: "BSc in Software Engineering"
+ *                     fieldOfStudy:
+ *                       type: string
+ *                       example: "Computer Science"
+ *                     startYear:
+ *                       type: number
+ *                       example: 2018
+ *                     endYear:
+ *                       type: number
+ *                       example: 2022
+ *                     description:
+ *                       type: string
+ *                       example: "Graduated with honors."
+ *               experience:
+ *                 type: array
+ *                 description: Optional - provide one or more experience records
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     company:
+ *                       type: string
+ *                       example: "Creavers Service plc"
+ *                     position:
+ *                       type: string
+ *                       example: "Full Stack Developer"
+ *                     startDate:
+ *                       type: string
+ *                       format: date
+ *                       example: "2022-01-01"
+ *                     endDate:
+ *                       type: string
+ *                       format: date
+ *                       example: "2024-12-31"
+ *                     current:
+ *                       type: boolean
+ *                       example: false
+ *                     description:
+ *                       type: string
+ *                       example: "Worked on various MERN stack projects."
+ *               skills:
+ *                 type: array
+ *                 description: Optional - provide a list of skills
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     name:
+ *                       type: string
+ *                       example: "JavaScript"
+ *                     level:
+ *                       type: string
+ *                       enum: [beginner, intermediate, advanced, expert]
+ *                       example: "advanced"
+ *               socialMedia:
+ *                 type: object
+ *                 description: Optional - provide social media links
+ *                 properties:
+ *                   linkedIn:
+ *                     type: string
+ *                     example: "https://linkedin.com/in/usmael"
+ *                   twitter:
+ *                     type: string
+ *                     example: "https://twitter.com/usmael"
+ *                   github:
+ *                     type: string
+ *                     example: "https://github.com/usmael"
  *     responses:
  *       200:
  *         description: User updated successfully
@@ -215,13 +308,76 @@
  *             schema:
  *               $ref: '#/components/schemas/User'
  *       400:
- *         description: Validation error
+ *         description: |
+ *           Possible errors:
+ *           - Validation error
+ *           - Invalid file type
+ *           - File too large
  *       401:
- *         description: Unauthorized
+ *         description: Unauthorized (missing or invalid token)
  *       403:
- *         description: Forbidden (Not authorized to update)
+ *         description: |
+ *           Forbidden when:
+ *           - Non-admin tries to update another user's profile
+ *           - Non-admin tries to change role/status
  *       404:
  *         description: User not found
+ *       413:
+ *         description: File too large (max 2MB)
+ */
+/**
+ * @swagger
+ * /auth/profile:
+ *   patch:
+ *     summary: Update own profile (simplified)
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               profilePhoto:
+ *                 type: string
+ *                 format: binary
+ *               fullName:
+ *                 type: string
+ *               phone:
+ *                 type: string
+ *               address:
+ *                 type: string
+ *               bio:
+ *                 type: string
+ *               website:
+ *                 type: string
+ *               education:
+ *                 type: array
+ *                 items:
+ *                   $ref: '#/components/schemas/Education'
+ *               experience:
+ *                 type: array
+ *                 items:
+ *                   $ref: '#/components/schemas/Experience'
+ *               skills:
+ *                 type: array
+ *                 items:
+ *                   $ref: '#/components/schemas/Skill'
+ *               socialMedia:
+ *                 $ref: '#/components/schemas/SocialMedia'
+ *     responses:
+ *       200:
+ *         description: Profile updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
+ *       400:
+ *         description: Invalid input
+ *       401:
+ *         description: Unauthorized
  */
 /**
  * @swagger

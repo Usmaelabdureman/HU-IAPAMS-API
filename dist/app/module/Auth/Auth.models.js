@@ -1,4 +1,7 @@
 "use strict";
+// import mongoose, { Schema, Document } from 'mongoose';
+// import bcrypt from 'bcrypt';
+// import config from '../../config';
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -46,9 +49,86 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.User = void 0;
+// export interface IUser extends Document {
+//   username: string;
+//   email: string;
+//   password: string;
+//   role: 'admin' | 'staff' | 'evaluator';
+//   fullName?: string; 
+//   status?: 'active' | 'inactive'; // Account status
+//   lastLogin?: Date;
+//   createdAt: Date;
+//   updatedAt: Date;
+//   phone?: string;
+//   address?: string;
+//   department?: string;
+//   positionType?: string;
+//   resetPasswordToken?: string;
+//   resetPasswordExpires?: Date;
+//   comparePassword(candidatePassword: string): Promise<boolean>;
+// }
+// const userSchema = new Schema<IUser>(
+//   {
+//     username: { type: String, required: true, unique: true, trim: true },
+//     email: { type: String, required: true, unique: true, trim: true },
+//     password: { type: String, required: true, select: false },
+//     role: { 
+//       type: String, 
+//       required: true, 
+//       enum: ['admin', 'staff', 'evaluator'] 
+//     },
+//     fullName: { type: String, required: function() { return this.role === 'staff'; } },
+//     status: { type: String, enum: ['active', 'inactive'], default: 'active' },
+//     lastLogin: { type: Date },
+//     phone: { type: String },
+//     address: { type: String },
+//     department: { type: String },
+//     positionType: { type: String },
+//     resetPasswordToken: { type: String, select: false },
+//     resetPasswordExpires: { type: Date , select: false },
+//   },
+//   { timestamps: true }
+// );
+// // Hash password before saving
+// userSchema.pre<IUser>('save', async function(next) {
+//   if (!this.isModified('password')) return next();
+//   this.password = await bcrypt.hash(
+//     this.password,
+//     Number(config.salt_rounds)
+//   );
+//   next();
+// });
+// // Method to compare passwords
+// userSchema.methods.comparePassword = async function(
+//   candidatePassword: string
+// ): Promise<boolean> {
+//   return bcrypt.compare(candidatePassword, this.password);
+// };
+// export const User = mongoose.model<IUser>('User', userSchema);
 const mongoose_1 = __importStar(require("mongoose"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const config_1 = __importDefault(require("../../config"));
+// Sub-schemas
+const educationSchema = new mongoose_1.Schema({
+    institution: { type: String },
+    degree: { type: String },
+    fieldOfStudy: { type: String },
+    startYear: { type: Number },
+    endYear: { type: Number },
+    description: { type: String }
+}, { _id: false });
+const experienceSchema = new mongoose_1.Schema({
+    company: { type: String },
+    position: { type: String },
+    startDate: { type: Date },
+    endDate: { type: Date },
+    current: { type: Boolean, default: false },
+    description: { type: String }
+}, { _id: false });
+const skillSchema = new mongoose_1.Schema({
+    name: { type: String },
+    level: { type: String, enum: ['beginner', 'intermediate', 'advanced', 'expert'] }
+}, { _id: false });
 const userSchema = new mongoose_1.Schema({
     username: { type: String, required: true, unique: true, trim: true },
     email: { type: String, required: true, unique: true, trim: true },
@@ -67,6 +147,18 @@ const userSchema = new mongoose_1.Schema({
     positionType: { type: String },
     resetPasswordToken: { type: String, select: false },
     resetPasswordExpires: { type: Date, select: false },
+    // New fields
+    profilePhoto: { type: String },
+    bio: { type: String },
+    education: [educationSchema],
+    experience: [experienceSchema],
+    skills: [skillSchema],
+    socialMedia: {
+        linkedIn: { type: String },
+        twitter: { type: String },
+        github: { type: String }
+    },
+    website: { type: String }
 }, { timestamps: true });
 // Hash password before saving
 userSchema.pre('save', function (next) {

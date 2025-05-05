@@ -46,38 +46,38 @@
  * @swagger
  * /applications:
  *   post:
- *     summary: Submit new application
+ *     summary: Submit new application with file uploads
  *     tags: [Applications]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
+ *             required:
+ *               - position
+ *               - cv
  *             properties:
  *               position:
  *                 type: string
- *               documents:
- *                 type: object
- *                 properties:
- *                   cv:
- *                     type: string
- *                   coverLetter:
- *                     type: string
- *                   certificates:
- *                     type: array
- *                     items:
- *                       type: string
- *             example:
- *               position: 5f8d0d55b54764421b7156da
- *               documents:
- *                 cv: https://example.com/cv.pdf
- *                 coverLetter: https://example.com/cover-letter.pdf
- *                 certificates:
- *                   - https://example.com/cert1.pdf
- *                   - https://example.com/cert2.pdf
+ *                 description: ID of the position being applied for
+ *                 example: 5f8d0d55b54764421b7156da
+ *               cv:
+ *                 type: string
+ *                 format: binary
+ *                 description: CV file (PDF/DOCX, max 5MB)
+ *               coverLetter:
+ *                 type: string
+ *                 format: binary
+ *                 description: Cover letter file (PDF/DOCX, max 5MB)
+ *               certificates:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
+ *                 description: Certificate files (PDF/DOCX, max 5MB each, up to 10 files)
  *     responses:
  *       201:
  *         description: Application submitted successfully
@@ -89,6 +89,9 @@
  *         description: Invalid input or already applied
  *       401:
  *         description: Unauthorized
+ *       413:
+ *         description: File too large (max 5MB)
+ *
  * 
  *   get:
  *     summary: Get applications

@@ -20,6 +20,7 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const config_1 = __importDefault(require("../../config"));
 const crypto_1 = __importDefault(require("crypto"));
 const emailService_1 = require("../../shared/emailService");
+const supabase_1 = require("../../utils/supabase");
 const generateAuthTokens = (user) => __awaiter(void 0, void 0, void 0, function* () {
     const payload = {
         userId: user._id.toString(),
@@ -33,6 +34,73 @@ const generateAuthTokens = (user) => __awaiter(void 0, void 0, void 0, function*
     });
     const refreshToken = jsonwebtoken_1.default.sign(payload, config_1.default.jwt_refresh_secret, { expiresIn: '7d' });
     return { accessToken, refreshToken };
+});
+// Add this helper function
+const uploadProfilePhoto = (file, userId) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const fileExt = file.originalname.split('.').pop();
+        const fileName = `${userId}-profile-${Date.now()}.${fileExt}`;
+        const filePath = `profile-photos/${userId}/${fileName}`;
+        const { data, error } = yield supabase_1.supabase.storage
+            .from('profile-photos')
+            .upload(filePath, file.buffer, {
+            contentType: file.mimetype,
+            upsert: true
+        });
+        if (error) {
+            console.error('Supabase upload error:', error);
+            throw new Error(`Profile photo upload failed: ${error.message}`);
+        }
+        // Get public URL
+        const { data: { publicUrl } } = supabase_1.supabase.storage
+            .from('profile-photos')
+            .getPublicUrl(data.path);
+        return publicUrl;
+    }
+    catch (err) {
+        console.error('Profile photo upload error:', err);
+        throw new ApiError_1.default(http_status_1.default.INTERNAL_SERVER_ERROR, 'Profile photo upload failed');
+    }
+});
+// Update the updateUser function
+const updateUser = (userId, updateData, requesterId, requesterRole, profilePhoto) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = yield Auth_models_1.User.findById(userId);
+    if (!user) {
+        throw new ApiError_1.default(http_status_1.default.NOT_FOUND, 'User not found');
+    }
+    // Only allow users to update their own profile or admins to update any profile
+    // if (requesterRole !== 'admin' && requesterId !== userId) {
+    //   throw new ApiError(httpStatus.FORBIDDEN, 'Not authorized to update this user');
+    // }
+    // Handle profile photo upload
+    if (profilePhoto) {
+        const photoUrl = yield uploadProfilePhoto(profilePhoto, userId);
+        updateData.profilePhoto = photoUrl;
+    }
+    // Handle array updates (education, experience, skills)
+    if (updateData.education) {
+        user.education = updateData.education;
+        delete updateData.education;
+    }
+    if (updateData.experience) {
+        user.experience = updateData.experience;
+        delete updateData.experience;
+    }
+    if (updateData.skills) {
+        user.skills = updateData.skills;
+        delete updateData.skills;
+    }
+    // Prevent role modification for non-admins
+    // if (updateData.role && requesterRole !== 'admin') {
+    //   throw new ApiError(httpStatus.FORBIDDEN, 'Only admins can modify roles');
+    // }
+    // Prevent status modification for non-admins
+    // if (updateData.status && requesterRole !== 'admin') {
+    //   throw new ApiError(httpStatus.FORBIDDEN, 'Only admins can modify status');
+    // }
+    Object.assign(user, updateData);
+    yield user.save();
+    return user;
 });
 const registerUser = (userData) => __awaiter(void 0, void 0, void 0, function* () {
     const existingUser = yield Auth_models_1.User.findOne({
@@ -52,7 +120,20 @@ const registerUser = (userData) => __awaiter(void 0, void 0, void 0, function* (
             username: user.username,
             email: user.email,
             role: user.role,
-            fullName: user.fullName
+            fullName: user.fullName,
+            department: user.department,
+            positionType: user.positionType,
+            status: user.status,
+            lastLogin: user.lastLogin,
+            phone: user.phone,
+            address: user.address,
+            profilePhoto: user.profilePhoto,
+            bio: user.bio,
+            education: user.education ? user.education : undefined,
+            experience: user.experience ? user.experience : undefined,
+            skills: user.skills ? user.skills : undefined,
+            socialMedia: user.socialMedia,
+            website: user.website
         },
         tokens
     };
@@ -75,7 +156,19 @@ const loginUser = (loginData) => __awaiter(void 0, void 0, void 0, function* () 
             username: user.username,
             email: user.email,
             role: user.role,
-            fullName: user.fullName
+            fullName: user.fullName,
+            department: user.department,
+            positionType: user.positionType,
+            status: user.status,
+            lastLogin: user.lastLogin,
+            phone: user.phone,
+            address: user.address,
+            profilePhoto: user.profilePhoto,
+            bio: user.bio,
+            education: user.education ? user.education : undefined,
+            experience: user.experience ? user.experience : undefined,
+            skills: user.skills ? user.skills : undefined,
+            socialMedia: user.socialMedia,
         },
         tokens
     };
@@ -111,41 +204,46 @@ const getAllUsers = (page, limit, filters) => __awaiter(void 0, void 0, void 0, 
         data: users
     };
 });
-const updateUser = (userId, updateData, requesterId, requesterRole) => __awaiter(void 0, void 0, void 0, function* () {
-    const user = yield Auth_models_1.User.findById(userId);
-    if (!user) {
-        throw new ApiError_1.default(http_status_1.default.NOT_FOUND, 'User not found');
-    }
-    if (requesterRole !== 'admin' && requesterId !== userId) {
-        throw new ApiError_1.default(http_status_1.default.FORBIDDEN, 'Not authorized to update this user');
-    }
-    if (updateData.email || updateData.username) {
-        const existingUser = yield Auth_models_1.User.findOne({
-            $or: [
-                { email: updateData.email },
-                { username: updateData.username }
-            ],
-            _id: { $ne: userId }
-        });
-        if (existingUser) {
-            throw new ApiError_1.default(http_status_1.default.CONFLICT, 'Email or username already exists');
-        }
-    }
-    // Prevent role modification for non-admins
-    if (updateData.role && requesterRole !== 'admin') {
-        throw new ApiError_1.default(http_status_1.default.FORBIDDEN, 'Only admins can modify roles');
-    }
-    Object.assign(user, updateData);
-    yield user.save();
-    return {
-        _id: user.id.toString(),
-        username: user.username,
-        email: user.email,
-        role: user.role,
-        fullName: user.fullName,
-        status: user.status
-    };
-});
+// const updateUser = async (
+//   userId: string,
+//   updateData: IUpdateUserRequest,
+//   requesterId: string,
+//   requesterRole: string
+// ): Promise<any> => {
+//   const user = await User.findById(userId);
+//   if (!user) {
+//     throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+//   }
+//   if (requesterRole !== 'admin' && requesterId !== userId) {
+//     throw new ApiError(httpStatus.FORBIDDEN, 'Not authorized to update this user');
+//   }
+//   if (updateData.email || updateData.username) {
+//     const existingUser = await User.findOne({
+//       $or: [
+//         { email: updateData.email },
+//         { username: updateData.username }
+//       ],
+//       _id: { $ne: userId }
+//     });
+//     if (existingUser) {
+//       throw new ApiError(httpStatus.CONFLICT, 'Email or username already exists');
+//     }
+//   }
+//   // Prevent role modification for non-admins
+//   if (updateData.role && requesterRole !== 'admin') {
+//     throw new ApiError(httpStatus.FORBIDDEN, 'Only admins can modify roles');
+//   }
+//   Object.assign(user, updateData);
+//   await user.save();
+//   return {
+//     _id: user.id.toString(),
+//     username: user.username,
+//     email: user.email,
+//     role: user.role,
+//     fullName: user.fullName,
+//     status: user.status
+//   };
+// };
 const deleteUser = (userId, requesterId, requesterRole) => __awaiter(void 0, void 0, void 0, function* () {
     const user = yield Auth_models_1.User.findById(userId);
     if (!user) {
