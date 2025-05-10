@@ -154,9 +154,19 @@ const userSchema = new mongoose_1.Schema({
     experience: [experienceSchema],
     skills: [skillSchema],
     socialMedia: {
-        linkedIn: { type: String },
-        twitter: { type: String },
-        github: { type: String }
+        type: mongoose_1.Schema.Types.Mixed,
+        default: {},
+        validate: {
+            validator: function (value) {
+                // Allow empty object, or object with linkedIn, twitter, github properties
+                if (typeof value !== 'object' || value === null)
+                    return false;
+                if (Array.isArray(value))
+                    return false;
+                return true;
+            },
+            message: 'Social media must be an object'
+        }
     },
     website: { type: String }
 }, { timestamps: true });

@@ -152,10 +152,18 @@ const userSchema = new Schema<IUser>(
     education: [educationSchema],
     experience: [experienceSchema],
     skills: [skillSchema],
-    socialMedia: {
-      linkedIn: { type: String },
-      twitter: { type: String },
-      github: { type: String }
+      socialMedia: {
+      type: Schema.Types.Mixed,
+      default: {},
+      validate: {
+        validator: function(value: any) {
+          // Allow empty object, or object with linkedIn, twitter, github properties
+          if (typeof value !== 'object' || value === null) return false;
+          if (Array.isArray(value)) return false;
+          return true;
+        },
+        message: 'Social media must be an object'
+      }
     },
     website: { type: String }
   },

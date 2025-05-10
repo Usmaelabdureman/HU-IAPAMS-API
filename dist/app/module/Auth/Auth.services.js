@@ -21,6 +21,7 @@ const config_1 = __importDefault(require("../../config"));
 const crypto_1 = __importDefault(require("crypto"));
 const emailService_1 = require("../../shared/emailService");
 const supabase_1 = require("../../utils/supabase");
+const mongoose_1 = __importDefault(require("mongoose"));
 const generateAuthTokens = (user) => __awaiter(void 0, void 0, void 0, function* () {
     const payload = {
         userId: user._id.toString(),
@@ -63,44 +64,89 @@ const uploadProfilePhoto = (file, userId) => __awaiter(void 0, void 0, void 0, f
     }
 });
 // Update the updateUser function
-const updateUser = (userId, updateData, requesterId, requesterRole, profilePhoto) => __awaiter(void 0, void 0, void 0, function* () {
+// const updateUser = async (
+//   userId: string,
+//   updateData: IUpdateUserRequest,
+//   profilePhoto?: Express.Multer.File
+// ): Promise<any> => {
+//   const user = await User.findById(userId);
+//   if (!user) {
+//     throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+//   }
+//   // Handle profile photo upload
+//   if (profilePhoto) {
+//     const photoUrl = await uploadProfilePhoto(profilePhoto, userId);
+//     updateData.profilePhoto = photoUrl;
+//   }
+//   // Handle array updates (education, experience, skills)
+//   if (updateData.education) {
+//     user.education = updateData.education as unknown as typeof user.education;
+//     delete updateData.education;
+//   }
+//   if (updateData.experience) {
+//     user.experience = updateData.experience as unknown as typeof user.experience;
+//     delete updateData.experience;
+//   }
+//   if (updateData.skills) {
+//     user.skills = updateData.skills as unknown as typeof user.skills;
+//     delete updateData.skills;
+//   }
+//   Object.assign(user, updateData);
+//   await user.save();
+//   return user;
+// };
+const updateUser = (userId, updateData, profilePhoto) => __awaiter(void 0, void 0, void 0, function* () {
     const user = yield Auth_models_1.User.findById(userId);
     if (!user) {
         throw new ApiError_1.default(http_status_1.default.NOT_FOUND, 'User not found');
     }
-    // Only allow users to update their own profile or admins to update any profile
-    // if (requesterRole !== 'admin' && requesterId !== userId) {
-    //   throw new ApiError(httpStatus.FORBIDDEN, 'Not authorized to update this user');
-    // }
     // Handle profile photo upload
     if (profilePhoto) {
         const photoUrl = yield uploadProfilePhoto(profilePhoto, userId);
         updateData.profilePhoto = photoUrl;
     }
-    // Handle array updates (education, experience, skills)
+    // Handle array updates
     if (updateData.education) {
-        user.education = updateData.education;
+        user.education = Array.isArray(updateData.education) ?
+            updateData.education.map(edu => new mongoose_1.default.Schema(edu)) :
+            [];
         delete updateData.education;
     }
     if (updateData.experience) {
-        user.experience = updateData.experience;
+        user.experience = Array.isArray(updateData.experience) ?
+            updateData.experience.map(exp => new mongoose_1.default.Schema(exp)) :
+            [];
         delete updateData.experience;
     }
     if (updateData.skills) {
-        user.skills = updateData.skills;
+        user.skills = Array.isArray(updateData.skills) ?
+            updateData.skills.map(skill => new mongoose_1.default.Schema(skill)) :
+            [];
         delete updateData.skills;
     }
-    // Prevent role modification for non-admins
-    // if (updateData.role && requesterRole !== 'admin') {
-    //   throw new ApiError(httpStatus.FORBIDDEN, 'Only admins can modify roles');
-    // }
-    // Prevent status modification for non-admins
-    // if (updateData.status && requesterRole !== 'admin') {
-    //   throw new ApiError(httpStatus.FORBIDDEN, 'Only admins can modify status');
-    // }
+    // Handle socialMedia - ensure it's always an object
+    if (updateData.socialMedia) {
+        user.socialMedia = typeof updateData.socialMedia === 'object' &&
+            !Array.isArray(updateData.socialMedia) &&
+            updateData.socialMedia !== null ?
+            updateData.socialMedia :
+            {};
+        delete updateData.socialMedia;
+    }
+    // Update other fields
     Object.assign(user, updateData);
-    yield user.save();
-    return user;
+    try {
+        yield user.save();
+        return user;
+    }
+    catch (error) {
+        // Handle validation errors gracefully
+        if (error instanceof mongoose_1.default.Error.ValidationError) {
+            const messages = Object.values(error.errors).map(err => err.message);
+            throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, messages.join(', '));
+        }
+        throw error;
+    }
 });
 const registerUser = (userData) => __awaiter(void 0, void 0, void 0, function* () {
     const existingUser = yield Auth_models_1.User.findOne({

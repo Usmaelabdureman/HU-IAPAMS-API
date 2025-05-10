@@ -7,6 +7,7 @@ import config from '../../config';
 import crypto from 'crypto';
 import { sendPasswordResetEmail } from '../../shared/emailService';
 import { supabase } from '../../utils/supabase';
+import mongoose from 'mongoose';
 
 interface ITokenPayload {
   userId: string;
@@ -75,11 +76,51 @@ const uploadProfilePhoto = async (file: Express.Multer.File, userId: string) => 
 };
 
 // Update the updateUser function
+// const updateUser = async (
+//   userId: string,
+//   updateData: IUpdateUserRequest,
+
+//   profilePhoto?: Express.Multer.File
+// ): Promise<any> => {
+//   const user = await User.findById(userId);
+//   if (!user) {
+//     throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+//   }
+
+
+
+//   // Handle profile photo upload
+//   if (profilePhoto) {
+//     const photoUrl = await uploadProfilePhoto(profilePhoto, userId);
+//     updateData.profilePhoto = photoUrl;
+//   }
+
+//   // Handle array updates (education, experience, skills)
+//   if (updateData.education) {
+//     user.education = updateData.education as unknown as typeof user.education;
+//     delete updateData.education;
+//   }
+
+//   if (updateData.experience) {
+//     user.experience = updateData.experience as unknown as typeof user.experience;
+//     delete updateData.experience;
+//   }
+
+//   if (updateData.skills) {
+//     user.skills = updateData.skills as unknown as typeof user.skills;
+//     delete updateData.skills;
+//   }
+
+
+//   Object.assign(user, updateData);
+//   await user.save();
+
+//   return user;
+// };
+
 const updateUser = async (
   userId: string,
   updateData: IUpdateUserRequest,
-  requesterId: string,
-  requesterRole: string,
   profilePhoto?: Express.Multer.File
 ): Promise<any> => {
   const user = await User.findById(userId);
@@ -87,47 +128,58 @@ const updateUser = async (
     throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
   }
 
-  // Only allow users to update their own profile or admins to update any profile
-  // if (requesterRole !== 'admin' && requesterId !== userId) {
-  //   throw new ApiError(httpStatus.FORBIDDEN, 'Not authorized to update this user');
-  // }
-
   // Handle profile photo upload
   if (profilePhoto) {
     const photoUrl = await uploadProfilePhoto(profilePhoto, userId);
     updateData.profilePhoto = photoUrl;
   }
 
-  // Handle array updates (education, experience, skills)
+  // Handle array updates
   if (updateData.education) {
-    user.education = updateData.education as unknown as typeof user.education;
+    user.education = Array.isArray(updateData.education) ? 
+      updateData.education.map(edu => new mongoose.Schema(edu)) : 
+      [];
     delete updateData.education;
   }
 
   if (updateData.experience) {
-    user.experience = updateData.experience as unknown as typeof user.experience;
+    user.experience = Array.isArray(updateData.experience) ? 
+      updateData.experience.map(exp => new mongoose.Schema(exp)) : 
+      [];
     delete updateData.experience;
   }
 
   if (updateData.skills) {
-    user.skills = updateData.skills as unknown as typeof user.skills;
+    user.skills = Array.isArray(updateData.skills) ? 
+      updateData.skills.map(skill => new mongoose.Schema(skill)) : 
+      [];
     delete updateData.skills;
   }
 
-  // Prevent role modification for non-admins
-  // if (updateData.role && requesterRole !== 'admin') {
-  //   throw new ApiError(httpStatus.FORBIDDEN, 'Only admins can modify roles');
-  // }
+  // Handle socialMedia - ensure it's always an object
+  if (updateData.socialMedia) {
+    user.socialMedia = typeof updateData.socialMedia === 'object' && 
+                      !Array.isArray(updateData.socialMedia) && 
+                      updateData.socialMedia !== null ?
+      updateData.socialMedia :
+      {};
+    delete updateData.socialMedia;
+  }
 
-  // Prevent status modification for non-admins
-  // if (updateData.status && requesterRole !== 'admin') {
-  //   throw new ApiError(httpStatus.FORBIDDEN, 'Only admins can modify status');
-  // }
-
+  // Update other fields
   Object.assign(user, updateData);
-  await user.save();
-
-  return user;
+  
+  try {
+    await user.save();
+    return user;
+  } catch (error) {
+    // Handle validation errors gracefully
+    if (error instanceof mongoose.Error.ValidationError) {
+      const messages = Object.values(error.errors).map(err => err.message);
+      throw new ApiError(httpStatus.BAD_REQUEST, messages.join(', '));
+    }
+    throw error;
+  }
 };
 const registerUser = async (userData: IRegisterRequest): Promise<IAuthResponse> => {
   const existingUser = await User.findOne({ 

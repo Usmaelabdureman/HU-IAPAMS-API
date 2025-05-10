@@ -50,6 +50,7 @@ const getApplications = async (req: Request, res: Response) => {
   try {
     const filters = req.query;
     
+    
     const applications = await ApplicationService.getApplications(
       req.user?.userId!,
       req.user?.role!,

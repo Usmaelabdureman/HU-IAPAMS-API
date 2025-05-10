@@ -50,12 +50,9 @@ const getAllUsers = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, vo
         data: result.data
     });
 }));
-// Auth.controller.ts
 const updateUser = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b, _c;
+    var _a;
     const { id } = req.params;
-    const updateData = req.body;
-    const requesterId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.userId;
     if (!id) {
         res.status(http_status_1.default.BAD_REQUEST).send({
             success: false,
@@ -69,7 +66,7 @@ const updateUser = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, voi
     if (!id) {
         throw new Error('User ID is required');
     }
-    const result = yield Auth_services_1.AuthService.updateUser(req.params.userId, req.body, (_b = req.user) === null || _b === void 0 ? void 0 : _b.userId, (_c = req.user) === null || _c === void 0 ? void 0 : _c.role, req.file);
+    const result = yield Auth_services_1.AuthService.updateUser(req.params.userId, { userId: (_a = req.user) === null || _a === void 0 ? void 0 : _a.userId }, req.file);
     res.status(http_status_1.default.OK).send({
         success: true,
         message: 'User updated successfully',
@@ -137,27 +134,74 @@ const getMe = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, 
         data: result
     });
 }));
+// const updateProfile = catchAsync(async (req: Request, res: Response) => {
+//   const updateData = req.body;
+//   // log users data
+//   if (typeof updateData.education === 'string') {
+//     updateData.education = JSON.parse(updateData.education);
+//   }
+//   if (typeof updateData.experience === 'string') {
+//     updateData.experience = JSON.parse(updateData.experience);
+//   }
+//   if (typeof updateData.skills === 'string') {
+//     updateData.skills = JSON.parse(updateData.skills);
+//   }
+//   const updatedUser = await AuthService.updateUser(
+//     req.params.id, 
+//     { userId: req.user?.userId! } as IUpdateUserRequest,    
+//     req.file  
+//   );
+//   res.status(httpStatus.OK).send({
+//     success: true,
+//     data: updatedUser
+//   });
+// });
 const updateProfile = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b, _c;
     const updateData = req.body;
-    // log users data
-    console.log('User data:', updateData);
-    // log user id
-    console.log('User ID:', req.params.id);
-    // log user role
-    console.log('User role:', (_a = req.user) === null || _a === void 0 ? void 0 : _a.role);
-    // log user file
-    console.log('User file:', req.file);
+    // Parse stringified arrays if needed
     if (typeof updateData.education === 'string') {
-        updateData.education = JSON.parse(updateData.education);
+        try {
+            updateData.education = JSON.parse(updateData.education);
+        }
+        catch (e) {
+            throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'Invalid education data format');
+        }
     }
     if (typeof updateData.experience === 'string') {
-        updateData.experience = JSON.parse(updateData.experience);
+        try {
+            updateData.experience = JSON.parse(updateData.experience);
+        }
+        catch (e) {
+            throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'Invalid experience data format');
+        }
     }
     if (typeof updateData.skills === 'string') {
-        updateData.skills = JSON.parse(updateData.skills);
+        try {
+            updateData.skills = JSON.parse(updateData.skills);
+        }
+        catch (e) {
+            throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'Invalid skills data format');
+        }
     }
-    const updatedUser = yield Auth_services_1.AuthService.updateUser(req.params.id, req.body, (_b = req.user) === null || _b === void 0 ? void 0 : _b.userId, (_c = req.user) === null || _c === void 0 ? void 0 : _c.role, req.file);
+    // Handle socialMedia field
+    if (updateData.socialMedia) {
+        try {
+            updateData.socialMedia = typeof updateData.socialMedia === 'string' ?
+                JSON.parse(updateData.socialMedia) :
+                updateData.socialMedia;
+            // Ensure it's always an object
+            if (typeof updateData.socialMedia !== 'object' || updateData.socialMedia === null) {
+                updateData.socialMedia = {};
+            }
+        }
+        catch (e) {
+            updateData.socialMedia = {};
+        }
+    }
+    else {
+        updateData.socialMedia = {};
+    }
+    const updatedUser = yield Auth_services_1.AuthService.updateUser(req.params.id, updateData, req.file);
     res.status(http_status_1.default.OK).send({
         success: true,
         data: updatedUser
