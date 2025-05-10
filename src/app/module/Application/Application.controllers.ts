@@ -31,20 +31,42 @@ const applyToPosition = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const getApplications = catchAsync(async (req: Request, res: Response) => {
-  const filters = req.query;
-  const result = await ApplicationService.getApplications(
-    req.user?.userId!,
-    req.user?.role!,
-    filters
-  );
+// const getApplications = catchAsync(async (req: Request, res: Response) => {
+//   const filters = req.query;
+//   const result = await ApplicationService.getApplications(
+//     req.user?.userId!,
+//     req.user?.role!,
+//     filters
+//   );
 
-  res.status(httpStatus.OK).json({
-    success: true,
-    message: 'Applications retrieved successfully',
-    data: result
-  });
-});
+//   res.status(httpStatus.OK).json({
+//     success: true,
+//     message: 'Applications retrieved successfully',
+//     data: result
+//   });
+// });
+// In your controller
+const getApplications = async (req: Request, res: Response) => {
+  try {
+    const filters = req.query;
+    
+    const applications = await ApplicationService.getApplications(
+      req.user?.userId!,
+      req.user?.role!,
+      filters
+    );
+
+    res.status(200).json({
+      success: true,
+      data: applications
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch applications'
+    });
+  }
+};
 
 const withdrawApplication = catchAsync(async (req: Request, res: Response) => {
   const result = await ApplicationService.withdrawApplication(
@@ -64,11 +86,13 @@ const withdrawApplication = catchAsync(async (req: Request, res: Response) => {
 
 const submitEvaluation = catchAsync(async (req: Request, res: Response) => {
   const result = await ApplicationService.submitEvaluation(
-     req.params.id,
+    req.params.id,
     req.user?.userId!,
     req.body.scores,
     req.body.comments
   );
+ 
+
   res.status(httpStatus.OK).json({
     success: true,
     message: 'Evaluation submitted successfully',

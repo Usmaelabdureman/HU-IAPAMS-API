@@ -38,7 +38,7 @@ const login = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, 
     });
 }));
 const getAllUsers = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const filters = (0, pick_1.pick)(req.query, ['searchTerm', 'department', 'positionType', 'status']);
+    const filters = (0, pick_1.pick)(req.query, ['searchTerm', 'department', 'positionType', 'status', 'role']);
     const paginationOptions = (0, pick_1.pick)(req.query, paginationHelper_1.paginationFields);
     const page = parseInt(paginationOptions.page, 10) || 1;
     const limit = parseInt(paginationOptions.limit, 10) || 10;

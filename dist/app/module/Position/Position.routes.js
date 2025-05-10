@@ -8,6 +8,6 @@ const router = (0, express_1.Router)();
 router.post("/create", (0, auth_1.auth)(), Position_controllers_1.PositionController.createPosition);
 router.get("/", Position_controllers_1.PositionController.getAllPositions);
 router.get("/:id", Position_controllers_1.PositionController.getPositionById);
-router.put("/:id", Position_controllers_1.PositionController.updatePosition);
-router.delete("/:id", Position_controllers_1.PositionController.closePosition);
+router.patch("/:id", (0, auth_1.auth)(), Position_controllers_1.PositionController.updatePosition);
+router.delete("/:id", (0, auth_1.auth)(), Position_controllers_1.PositionController.closePosition);
 exports.PositionRoutes = router;

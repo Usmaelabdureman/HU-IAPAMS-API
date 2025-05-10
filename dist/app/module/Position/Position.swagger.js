@@ -40,6 +40,12 @@
  *           type: string
  *           format: date-time
  *           example: "2024-12-31T23:59:59Z"
+ *         evaluators:
+ *           type: array
+ *           items:
+ *             type: string
+ *           description: Array of evaluator user IDs
+ *           example: ["605c72ef1f1b2c001f8e4a3d", "605c72ef1f1b2c001f8e4a3e"]
  *         status:
  *           type: string
  *           enum: [open, closed, filled]

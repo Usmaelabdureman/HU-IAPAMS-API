@@ -22,8 +22,21 @@ const applicationSchema = new mongoose_1.Schema({
     status: {
         type: String,
         enum: Object.values(Application_interfaces_1.ApplicationStatus),
-        default: Application_interfaces_1.ApplicationStatus.PENDING
+        default: Application_interfaces_1.ApplicationStatus.UNDER_REVIEW
     },
+    evaluations: [
+        {
+            evaluator: { type: mongoose_1.Schema.Types.ObjectId, ref: 'User' },
+            scores: {
+                experience: { type: Number, min: 1, max: 10 },
+                education: { type: Number, min: 1, max: 10 },
+                skills: { type: Number, min: 1, max: 10 },
+            },
+            comments: String,
+            submittedAt: { type: Date, default: Date.now }
+        }
+    ],
+    averageScore: Number,
     appliedAt: { type: Date, default: Date.now },
     updatedAt: Date
 });

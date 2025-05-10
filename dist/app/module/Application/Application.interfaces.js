@@ -8,4 +8,5 @@ var ApplicationStatus;
     ApplicationStatus["SHORTLISTED"] = "shortlisted";
     ApplicationStatus["REJECTED"] = "rejected";
     ApplicationStatus["WITHDRAWN"] = "withdrawn";
+    ApplicationStatus["ACCEPTED"] = "accepted";
 })(ApplicationStatus || (exports.ApplicationStatus = ApplicationStatus = {}));

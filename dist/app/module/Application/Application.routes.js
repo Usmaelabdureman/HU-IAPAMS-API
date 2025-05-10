@@ -9,4 +9,6 @@ const router = (0, express_1.Router)();
 router.post('/', (0, auth_1.auth)('staff', 'evaluator'), multer_1.applicationUpload, Application_controllers_1.ApplicationController.applyToPosition);
 router.get('/', (0, auth_1.auth)('staff', 'evaluator', 'admin'), Application_controllers_1.ApplicationController.getApplications);
 router.patch('/:id/withdraw', (0, auth_1.auth)('staff', 'evaluator'), Application_controllers_1.ApplicationController.withdrawApplication);
+router.post('/:id/evaluate', (0, auth_1.auth)('evaluator'), Application_controllers_1.ApplicationController.submitEvaluation);
+router.get('/:id', (0, auth_1.auth)('staff', 'evaluator'), Application_controllers_1.ApplicationController.getApplications);
 exports.ApplicationRoutes = router;

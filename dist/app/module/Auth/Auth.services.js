@@ -181,7 +181,10 @@ const getAllUsers = (page, limit, filters) => __awaiter(void 0, void 0, void 0, 
         query.$or = [
             { username: { $regex: filters.searchTerm, $options: 'i' } },
             { email: { $regex: filters.searchTerm, $options: 'i' } },
-            { fullName: { $regex: filters.searchTerm, $options: 'i' } }
+            { fullName: { $regex: filters.searchTerm, $options: 'i' } },
+            { department: { $regex: filters.searchTerm, $options: 'i' } },
+            { positionType: { $regex: filters.searchTerm, $options: 'i' } },
+            { status: { $regex: filters.searchTerm, $options: 'i' } }
         ];
     }
     if (filters.department) {
@@ -192,6 +195,9 @@ const getAllUsers = (page, limit, filters) => __awaiter(void 0, void 0, void 0, 
     }
     if (filters.status) {
         query.status = filters.status;
+    }
+    if (filters.role) {
+        query.role = filters.role;
     }
     const users = yield Auth_models_1.User.find(query).skip(skip).limit(limit);
     const total = yield Auth_models_1.User.countDocuments(query);

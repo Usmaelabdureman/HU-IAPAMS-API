@@ -42,6 +42,7 @@ const positionSchema = new mongoose_1.Schema({
     positionType: { type: String, required: true },
     requirements: { type: [String], required: true },
     deadline: { type: Date, required: true },
+    evaluators: [{ type: mongoose_1.Schema.Types.ObjectId, ref: 'User' }],
     status: { type: String, enum: ['open', 'closed', 'filled'], default: 'open' },
     createdBy: { type: mongoose_1.Schema.Types.ObjectId, ref: 'User', required: true }
 }, { timestamps: true });

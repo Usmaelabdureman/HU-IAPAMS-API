@@ -61,8 +61,25 @@ const Position_models_1 = require("./Position.models");
 const ApiError_1 = __importDefault(require("../../error/ApiError"));
 const http_status_1 = __importDefault(require("http-status"));
 const paginationHelpers = __importStar(require("../../utils/paginationHelper"));
+const Auth_models_1 = require("../Auth/Auth.models");
+// const createPosition = async (positionData: IPosition, userId: string) => {
+//   // Add createdBy to the position data
+//   const positionWithCreator = {
+//     ...positionData,
+//     createdBy: userId
+//   };
+//   return await Position.create(positionWithCreator);
+// };
 const createPosition = (positionData, userId) => __awaiter(void 0, void 0, void 0, function* () {
-    // Add createdBy to the position data
+    if (positionData.evaluators && positionData.evaluators.length > 0) {
+        const evaluators = yield Auth_models_1.User.find({
+            _id: { $in: positionData.evaluators },
+            role: 'evaluator'
+        });
+        if (evaluators.length !== positionData.evaluators.length) {
+            throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'One or more evaluators are invalid');
+        }
+    }
     const positionWithCreator = Object.assign(Object.assign({}, positionData), { createdBy: userId });
     return yield Position_models_1.Position.create(positionWithCreator);
 });
@@ -103,13 +120,34 @@ const getAllPositions = (filters, paginationOptions) => __awaiter(void 0, void 0
 const getPositionById = (id) => __awaiter(void 0, void 0, void 0, function* () {
     return yield Position_models_1.Position.findById(id).populate('createdBy', 'username email');
 });
+// const updatePosition = async (id: string, updateData: Partial<IPosition>, userId: string) => {
+//   const position = await Position.findById(id);
+//   if (!position) {
+//     throw new ApiError(httpStatus.NOT_FOUND, 'Position not found');
+//   }
+//   if (position.createdBy.toString() !== userId) {
+//     throw new ApiError(httpStatus.FORBIDDEN, 'You are not authorized to update this position');
+//   }
+//   Object.assign(position, updateData);
+//   await position.save();
+//   return position;
+// };
 const updatePosition = (id, updateData, userId) => __awaiter(void 0, void 0, void 0, function* () {
     const position = yield Position_models_1.Position.findById(id);
-    if (!position) {
+    if (!position)
         throw new ApiError_1.default(http_status_1.default.NOT_FOUND, 'Position not found');
-    }
     if (position.createdBy.toString() !== userId) {
-        throw new ApiError_1.default(http_status_1.default.FORBIDDEN, 'You are not authorized to update this position');
+        throw new ApiError_1.default(http_status_1.default.FORBIDDEN, 'Not authorized to update this position');
+    }
+    // Validate evaluators if being updated
+    if (updateData.evaluators) {
+        const evaluators = yield Auth_models_1.User.find({
+            _id: { $in: updateData.evaluators },
+            role: 'evaluator'
+        });
+        if (evaluators.length !== updateData.evaluators.length) {
+            throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'One or more evaluators are invalid');
+        }
     }
     Object.assign(position, updateData);
     yield position.save();
