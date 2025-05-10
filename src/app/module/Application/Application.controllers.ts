@@ -16,11 +16,7 @@ const applyToPosition = catchAsync(async (req: Request, res: Response) => {
     certificates?: Express.Multer.File[];
   };
 
-  console.log('applicationData', applicationData);
-  console.log('files', files);
-  //user id is coming from the token
-  console.log('userId', req.user?.userId); 
-  
+
   // const result = await ApplicationService.applyToPosition(applicationData);
   const result = await ApplicationService.applyToPosition(
     applicationData,
@@ -63,8 +59,25 @@ const withdrawApplication = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+
+// submitevaluation
+
+const submitEvaluation = catchAsync(async (req: Request, res: Response) => {
+  const result = await ApplicationService.submitEvaluation(
+     req.params.id,
+    req.user?.userId!,
+    req.body.scores,
+    req.body.comments
+  );
+  res.status(httpStatus.OK).json({
+    success: true,
+    message: 'Evaluation submitted successfully',
+    data: result
+  });
+});
 export const ApplicationController = {
   applyToPosition,
   getApplications,
-  withdrawApplication
+  withdrawApplication,
+  submitEvaluation
 };

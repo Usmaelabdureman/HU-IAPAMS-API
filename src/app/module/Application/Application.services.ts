@@ -3,6 +3,8 @@ import { IApplication, ApplicationStatus } from './Application.interfaces';
 import httpStatus from 'http-status';
 import ApiError from '../../error/ApiError';
 import { supabase } from '../../utils/supabase';
+import { Position } from '../Position/Position.models';
+import mongoose from 'mongoose';
 
 
 const uploadFile = async (file: Express.Multer.File, userId: string, type: string) => {
@@ -108,9 +110,67 @@ const withdrawApplication = async (applicationId: string, userId: string) => {
   return application;
 };
 
+
+
+export const submitEvaluation = async (
+  applicationId: string,
+  evaluatorId: string,
+  scores: { experience: number; education: number; skills: number },
+  comments: string
+) => {
+  // 1. Verify evaluator is assigned to this position
+  const application = await Application.findById(applicationId).populate('position');
+  if (!application) throw new ApiError(404, 'Application not found');
+
+  const position = await Position.findById(application.position);
+  if (!position?.evaluators?.includes(new mongoose.Types.ObjectId(evaluatorId))) {
+    throw new ApiError(403, 'Not authorized to evaluate this application');
+  }
+
+  // 2. Add/update evaluation
+  const evaluationIndex = application.evaluations.findIndex(
+    (e) => e?.evaluator!.toString() === evaluatorId
+  );
+
+  const evaluationData = {
+    evaluator: new mongoose.Types.ObjectId(evaluatorId),
+    scores,
+    comments,
+    submittedAt: new Date()
+  };
+
+  if (evaluationIndex === -1) {
+    application.evaluations.push(evaluationData);
+  } else {
+    application.evaluations[evaluationIndex].set(evaluationData);
+  }
+
+  // 3. Calculate average score
+  const avgScore = calculateAverageScore(application.evaluations);
+  application.averageScore = avgScore;
+
+  // 4. Auto-decide if all evaluators submitted
+  if (position.evaluators.length === application.evaluations.length) {
+    application.status = avgScore >= 7 ? ApplicationStatus.ACCEPTED : ApplicationStatus.REJECTED;
+  }
+
+  await application.save();
+  return application;
+};
+
+// Helper function
+const calculateAverageScore = (evaluations: any[]) => {
+  if (evaluations.length === 0) return 0;
+  const total = evaluations.reduce((sum, evaluation) => {
+    return sum + (evaluation.scores.experience + evaluation.scores.education + evaluation.scores.skills) / 3;
+  }, 0);
+  return total / evaluations.length;
+};
 export const ApplicationService = {
   applyToPosition,
   getApplications,
   withdrawApplication,
-  uploadFile
+  uploadFile,
+  submitEvaluation,
+  calculateAverageScore
 };

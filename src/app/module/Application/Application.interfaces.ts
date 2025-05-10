@@ -14,5 +14,6 @@ export interface IApplication {
     UNDER_REVIEW = 'under_review',
     SHORTLISTED = 'shortlisted',
     REJECTED = 'rejected',
-    WITHDRAWN = 'withdrawn'
+    WITHDRAWN = 'withdrawn',
+    ACCEPTED = 'accepted',
   }

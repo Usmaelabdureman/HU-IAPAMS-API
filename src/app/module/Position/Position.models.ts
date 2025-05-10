@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document, mongo } from 'mongoose';
 
 export interface IPosition extends Document {
   title: string;
@@ -11,6 +11,8 @@ export interface IPosition extends Document {
   createdBy: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
+  evaluators: mongoose.Types.ObjectId[];
+
 }
 
 const positionSchema = new Schema<IPosition>({
@@ -20,6 +22,7 @@ const positionSchema = new Schema<IPosition>({
   positionType: { type: String, required: true },
   requirements: { type: [String], required: true },
   deadline: { type: Date, required: true },
+  evaluators: [{ type: Schema.Types.ObjectId, ref: 'User' }],
   status: { type: String, enum: ['open', 'closed', 'filled'], default: 'open' },
   createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true }
 }, { timestamps: true });

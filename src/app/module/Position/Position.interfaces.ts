@@ -1,4 +1,4 @@
-import { Document } from 'mongoose';
+import mongoose, { Document } from 'mongoose';
 
 export interface IPosition extends Document {
   title: string;
@@ -9,6 +9,9 @@ export interface IPosition extends Document {
   deadline: Date;
   status: 'open' | 'closed' | 'filled';
   createdBy: string;
+  evaluators: mongoose.Types.ObjectId[];
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface IPositionFilters {

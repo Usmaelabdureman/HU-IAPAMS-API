@@ -31,7 +31,7 @@ const login = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getAllUsers = catchAsync(async (req: Request, res: Response) => {
-  const filters = pick(req.query, ['searchTerm', 'department', 'positionType', 'status']);
+  const filters = pick(req.query, ['searchTerm', 'department', 'positionType', 'status', 'role']);
   const paginationOptions = pick(req.query, paginationFields);
 
   const page = parseInt(paginationOptions.page as string, 10) || 1;

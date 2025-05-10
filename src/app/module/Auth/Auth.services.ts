@@ -214,7 +214,7 @@ const loginUser = async (loginData: ILoginRequest): Promise<IAuthResponse> => {
 const getAllUsers = async (
   page: number,
   limit: number,
-  filters: { searchTerm?: string; department?: string; positionType?: string; status?: string }
+  filters: { searchTerm?: string; department?: string; role?:string, positionType?: string; status?: string }
 ): Promise<{ meta: { page: number; limit: number; total: number }; data: any[] }> => {
   const skip = (page - 1) * limit;
 
@@ -225,7 +225,11 @@ const getAllUsers = async (
     query.$or = [
       { username: { $regex: filters.searchTerm, $options: 'i' } },
       { email: { $regex: filters.searchTerm, $options: 'i' } },
-      { fullName: { $regex: filters.searchTerm, $options: 'i' } }
+      { fullName: { $regex: filters.searchTerm, $options: 'i' } },
+      { department: { $regex: filters.searchTerm, $options: 'i' } },
+      { positionType: { $regex: filters.searchTerm, $options: 'i' } },
+      { status: { $regex: filters.searchTerm, $options: 'i' } }
+
     ];
   }
 
@@ -239,6 +243,9 @@ const getAllUsers = async (
 
   if (filters.status) {
     query.status = filters.status;
+  }
+  if (filters.role) {
+    query.role = filters.role;
   }
 
   const users = await User.find(query).skip(skip).limit(limit);

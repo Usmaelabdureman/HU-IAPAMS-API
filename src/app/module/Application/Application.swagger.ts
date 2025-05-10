@@ -1,8 +1,52 @@
+// /**
+//  * @swagger
+//  * tags:
+//  *   - name: Applications
+//  *     description: Job application management
+//  */
+
+// /**
+//  * @swagger
+//  * components:
+//  *   schemas:
+//  *     Application:
+//  *       type: object
+//  *       required:
+//  *         - positiona
+//  *         - applicant
+//  *         - documents
+//  *       properties:
+//  *         position:
+//  *           type: string
+//  *           example: 5f8d0d55b54764421b7156da
+//  *         applicant:
+//  *           type: string
+//  *           example: 5f8d0d55b54764421b7156db
+//  *         documents:
+//  *           type: object
+//  *           properties:
+//  *             cv:
+//  *               type: string
+//  *               example: https://example.com/cv.pdf
+//  *             coverLetter:
+//  *               type: string
+//  *               example: https://example.com/cover-letter.pdf
+//  *             certificates:
+//  *               type: array
+//  *               items:
+//  *                 type: string
+//  *                 example: https://example.com/certificate.pdf
+//  *         status:
+//  *           type: string
+//  *           enum: [pending, under_review, shortlisted, rejected, withdrawn]
+//  *           example: pending
+//  */
+
 /**
  * @swagger
  * tags:
  *   - name: Applications
- *     description: Job application management
+ *     description: Job application and evaluation management
  */
 
 /**
@@ -11,34 +55,45 @@
  *   schemas:
  *     Application:
  *       type: object
- *       required:
- *         - position
- *         - applicant
- *         - documents
  *       properties:
- *         position:
- *           type: string
- *           example: 5f8d0d55b54764421b7156da
- *         applicant:
- *           type: string
- *           example: 5f8d0d55b54764421b7156db
- *         documents:
- *           type: object
- *           properties:
- *             cv:
- *               type: string
- *               example: https://example.com/cv.pdf
- *             coverLetter:
- *               type: string
- *               example: https://example.com/cover-letter.pdf
- *             certificates:
- *               type: array
- *               items:
+ *         evaluations:
+ *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               evaluator:
  *                 type: string
- *                 example: https://example.com/certificate.pdf
- *         status:
+ *                 example: 5f8d0d55b54764421b7156dd
+ *               scores:
+ *                 type: object
+ *                 properties:
+ *                   experience:
+ *                     type: number
+ *                     minimum: 0
+ *                     maximum: 10
+ *                     example: 8.5
+ *                   education:
+ *                     type: number
+ *                     minimum: 0
+ *                     maximum: 10
+ *                     example: 7.0
+ *                   skills:
+ *                     type: number
+ *                     minimum: 0
+ *                     maximum: 10
+ *                     example: 9.0
+ *               comments:
+ *                 type: string
+ *                 example: "Strong candidate with relevant experience"
+ *               evaluatedAt:
+ *                 type: string
+ *                 format: date-time
+ *         averageScore:
+ *           type: number
+ *           example: 8.2
+ *         finalDecision:
  *           type: string
- *           enum: [pending, under_review, shortlisted, rejected, withdrawn]
+ *           enum: [pending, accepted, rejected]
  *           example: pending
  */
 
@@ -168,6 +223,100 @@
  *               $ref: '#/components/schemas/Application'
  *       401:
  *         description: Unauthorized
+ *       404:
+ *         description: Application not found
+ */
+
+
+/**
+ * @swagger
+ * /applications/{id}/evaluate:
+ *   post:
+ *     summary: Submit evaluation for an application
+ *     tags: [Applications]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Application ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - scores
+ *             properties:
+ *               scores:
+ *                 type: object
+ *                 required:
+ *                   - experience
+ *                   - education
+ *                   - skills
+ *                 properties:
+ *                   experience:
+ *                     type: number
+ *                     minimum: 0
+ *                     maximum: 10
+ *                     example: 8
+ *                   education:
+ *                     type: number
+ *                     minimum: 0
+ *                     maximum: 10
+ *                     example: 7
+ *                   skills:
+ *                     type: number
+ *                     minimum: 0
+ *                     maximum: 10
+ *                     example: 9
+ *               comments:
+ *                 type: string
+ *                 example: "Strong technical skills but lacks management experience"
+ *     responses:
+ *       200:
+ *         description: Evaluation submitted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Application'
+ *       400:
+ *         description: Invalid input or unauthorized evaluation
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden (not assigned as evaluator)
+ *       404:
+ *         description: Application not found
+ *
+ * /applications/{id}:
+ *   get:
+ *     summary: Get application details (including evaluations)
+ *     tags: [Applications]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Application ID
+ *     responses:
+ *       200:
+ *         description: Application details with evaluations
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Application'
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden (not applicant or evaluator)
  *       404:
  *         description: Application not found
  */
