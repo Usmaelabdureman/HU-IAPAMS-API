@@ -118,6 +118,69 @@ const uploadProfilePhoto = async (file: Express.Multer.File, userId: string) => 
 //   return user;
 // };
 
+// const updateUser = async (
+//   userId: string,
+//   updateData: IUpdateUserRequest,
+//   profilePhoto?: Express.Multer.File
+// ): Promise<any> => {
+//   const user = await User.findById(userId);
+//   if (!user) {
+//     throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+//   }
+
+//   // Handle profile photo upload
+//   if (profilePhoto) {
+//     const photoUrl = await uploadProfilePhoto(profilePhoto, userId);
+//     updateData.profilePhoto = photoUrl;
+//   }
+
+//   // Handle array updates
+//   if (updateData.education) {
+//     user.education = Array.isArray(updateData.education) ? 
+//       updateData.education.map(edu => new mongoose.Schema(edu)) : 
+//       [];
+//     delete updateData.education;
+//   }
+
+//   if (updateData.experience) {
+//     user.experience = Array.isArray(updateData.experience) ? 
+//       updateData.experience.map(exp => new mongoose.Schema(exp)) : 
+//       [];
+//     delete updateData.experience;
+//   }
+
+//   if (updateData.skills) {
+//     user.skills = Array.isArray(updateData.skills) ? 
+//       updateData.skills.map(skill => new mongoose.Schema(skill)) : 
+//       [];
+//     delete updateData.skills;
+//   }
+
+//   // Handle socialMedia - ensure it's always an object
+//   if (updateData.socialMedia) {
+//     user.socialMedia = typeof updateData.socialMedia === 'object' && 
+//                       !Array.isArray(updateData.socialMedia) && 
+//                       updateData.socialMedia !== null ?
+//       updateData.socialMedia :
+//       {};
+//     delete updateData.socialMedia;
+//   }
+
+//   // Update other fields
+//   Object.assign(user, updateData);
+  
+//   try {
+//     await user.save();
+//     return user;
+//   } catch (error) {
+//     // Handle validation errors gracefully
+//     if (error instanceof mongoose.Error.ValidationError) {
+//       const messages = Object.values(error.errors).map(err => err.message);
+//       throw new ApiError(httpStatus.BAD_REQUEST, messages.join(', '));
+//     }
+//     throw error;
+//   }
+// };
 const updateUser = async (
   userId: string,
   updateData: IUpdateUserRequest,
@@ -134,30 +197,49 @@ const updateUser = async (
     updateData.profilePhoto = photoUrl;
   }
 
-  // Handle array updates
-  if (updateData.education) {
-    user.education = Array.isArray(updateData.education) ? 
-      updateData.education.map(edu => new mongoose.Schema(edu)) : 
-      [];
+  // Handle array updates - CORRECTED IMPLEMENTATION
+  if (updateData.education !== undefined) {
+    user.set('education', Array.isArray(updateData.education)
+      ? updateData.education.map(edu => ({
+          institution: edu.institution || '',
+          degree: edu.degree || '',
+          fieldOfStudy: edu.fieldOfStudy || '',
+          startYear: edu.startYear ? Number(edu.startYear) : undefined,
+          endYear: edu.endYear ? Number(edu.endYear) : undefined,
+          description: edu.description || ''
+        }))
+      : []
+    );
     delete updateData.education;
   }
 
-  if (updateData.experience) {
-    user.experience = Array.isArray(updateData.experience) ? 
-      updateData.experience.map(exp => new mongoose.Schema(exp)) : 
-      [];
+  if (updateData.experience !== undefined) {
+    user.set('experience', Array.isArray(updateData.experience)
+      ? updateData.experience.map(exp => ({
+          company: exp.company || '',
+          position: exp.position || '',
+          startDate: exp.startDate ? new Date(exp.startDate) : undefined,
+          endDate: exp.endDate ? new Date(exp.endDate) : undefined,
+          current: !!exp.current,
+          description: exp.description || ''
+        }))
+      : []
+    );
     delete updateData.experience;
   }
 
-  if (updateData.skills) {
-    user.skills = Array.isArray(updateData.skills) ? 
-      updateData.skills.map(skill => new mongoose.Schema(skill)) : 
-      [];
+  if (updateData.skills !== undefined) {
+    user.set('skills', Array.isArray(updateData.skills) ? 
+      updateData.skills.map(skill => ({
+        name: skill.name || '',
+        level: skill.level || 'beginner'
+      })) : 
+      []);
     delete updateData.skills;
   }
 
   // Handle socialMedia - ensure it's always an object
-  if (updateData.socialMedia) {
+  if (updateData.socialMedia !== undefined) {
     user.socialMedia = typeof updateData.socialMedia === 'object' && 
                       !Array.isArray(updateData.socialMedia) && 
                       updateData.socialMedia !== null ?
@@ -167,7 +249,11 @@ const updateUser = async (
   }
 
   // Update other fields
-  Object.assign(user, updateData);
+  (Object.keys(updateData) as (keyof IUpdateUserRequest)[]).forEach(key => {
+    if (updateData[key] !== undefined) {
+      (user as any)[key] = updateData[key];
+    }
+  });
   
   try {
     await user.save();

@@ -1,7 +1,4 @@
 "use strict";
-// import mongoose, { Schema, Document } from 'mongoose';
-// import bcrypt from 'bcrypt';
-// import config from '../../config';
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -49,85 +46,53 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.User = void 0;
-// export interface IUser extends Document {
-//   username: string;
-//   email: string;
-//   password: string;
-//   role: 'admin' | 'staff' | 'evaluator';
-//   fullName?: string; 
-//   status?: 'active' | 'inactive'; // Account status
-//   lastLogin?: Date;
-//   createdAt: Date;
-//   updatedAt: Date;
-//   phone?: string;
-//   address?: string;
-//   department?: string;
-//   positionType?: string;
-//   resetPasswordToken?: string;
-//   resetPasswordExpires?: Date;
-//   comparePassword(candidatePassword: string): Promise<boolean>;
-// }
-// const userSchema = new Schema<IUser>(
-//   {
-//     username: { type: String, required: true, unique: true, trim: true },
-//     email: { type: String, required: true, unique: true, trim: true },
-//     password: { type: String, required: true, select: false },
-//     role: { 
-//       type: String, 
-//       required: true, 
-//       enum: ['admin', 'staff', 'evaluator'] 
-//     },
-//     fullName: { type: String, required: function() { return this.role === 'staff'; } },
-//     status: { type: String, enum: ['active', 'inactive'], default: 'active' },
-//     lastLogin: { type: Date },
-//     phone: { type: String },
-//     address: { type: String },
-//     department: { type: String },
-//     positionType: { type: String },
-//     resetPasswordToken: { type: String, select: false },
-//     resetPasswordExpires: { type: Date , select: false },
-//   },
-//   { timestamps: true }
-// );
-// // Hash password before saving
-// userSchema.pre<IUser>('save', async function(next) {
-//   if (!this.isModified('password')) return next();
-//   this.password = await bcrypt.hash(
-//     this.password,
-//     Number(config.salt_rounds)
-//   );
-//   next();
-// });
-// // Method to compare passwords
-// userSchema.methods.comparePassword = async function(
-//   candidatePassword: string
-// ): Promise<boolean> {
-//   return bcrypt.compare(candidatePassword, this.password);
-// };
-// export const User = mongoose.model<IUser>('User', userSchema);
 const mongoose_1 = __importStar(require("mongoose"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const config_1 = __importDefault(require("../../config"));
-// Sub-schemas
 const educationSchema = new mongoose_1.Schema({
-    institution: { type: String },
-    degree: { type: String },
-    fieldOfStudy: { type: String },
-    startYear: { type: Number },
-    endYear: { type: Number },
-    description: { type: String }
+    institution: { type: String, default: null },
+    degree: { type: String, default: null },
+    fieldOfStudy: { type: String, default: null },
+    startYear: { type: Number, default: null, min: 1900, max: new Date().getFullYear() },
+    endYear: {
+        type: Number,
+        default: null,
+        min: 1900,
+        max: new Date().getFullYear(),
+        validate: {
+            validator: function (value) {
+                return !this.startYear || value >= this.startYear;
+            },
+            message: 'End year must be greater than or equal to start year'
+        }
+    },
+    description: { type: String, default: null }
 }, { _id: false });
 const experienceSchema = new mongoose_1.Schema({
-    company: { type: String },
-    position: { type: String },
-    startDate: { type: Date },
-    endDate: { type: Date },
+    company: { type: String, default: null },
+    position: { type: String, default: null },
+    startDate: { type: Date, default: null },
+    endDate: {
+        type: Date,
+        default: null,
+        validate: {
+            validator: function (value) {
+                const parent = this.parent();
+                return !parent.startDate || !value || value >= parent.startDate;
+            },
+            message: 'End date must be after start date'
+        }
+    },
     current: { type: Boolean, default: false },
-    description: { type: String }
+    description: { type: String, default: null }
 }, { _id: false });
 const skillSchema = new mongoose_1.Schema({
-    name: { type: String },
-    level: { type: String, enum: ['beginner', 'intermediate', 'advanced', 'expert'] }
+    name: { type: String, default: null },
+    level: {
+        type: String,
+        enum: ['beginner', 'intermediate', 'advanced', 'expert'],
+        default: 'beginner'
+    }
 }, { _id: false });
 const userSchema = new mongoose_1.Schema({
     username: { type: String, required: true, unique: true, trim: true },
@@ -156,17 +121,9 @@ const userSchema = new mongoose_1.Schema({
     socialMedia: {
         type: mongoose_1.Schema.Types.Mixed,
         default: {},
-        validate: {
-            validator: function (value) {
-                // Allow empty object, or object with linkedIn, twitter, github properties
-                if (typeof value !== 'object' || value === null)
-                    return false;
-                if (Array.isArray(value))
-                    return false;
-                return true;
-            },
-            message: 'Social media must be an object'
-        }
+        linkedIn: { type: String },
+        twitter: { type: String },
+        github: { type: String }
     },
     website: { type: String }
 }, { timestamps: true });

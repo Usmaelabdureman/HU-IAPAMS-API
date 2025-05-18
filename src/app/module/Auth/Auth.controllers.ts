@@ -156,78 +156,54 @@ const getMe = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-
-// const updateProfile = catchAsync(async (req: Request, res: Response) => {
-//   const updateData = req.body;
-//   // log users data
-
-  
-//   if (typeof updateData.education === 'string') {
-//     updateData.education = JSON.parse(updateData.education);
-//   }
-//   if (typeof updateData.experience === 'string') {
-//     updateData.experience = JSON.parse(updateData.experience);
-//   }
-//   if (typeof updateData.skills === 'string') {
-//     updateData.skills = JSON.parse(updateData.skills);
-//   }
-
-//   const updatedUser = await AuthService.updateUser(
-//     req.params.id, 
-//     { userId: req.user?.userId! } as IUpdateUserRequest,    
-//     req.file  
-//   );
-
-//   res.status(httpStatus.OK).send({
-//     success: true,
-//     data: updatedUser
-//   });
-// });
-
 const updateProfile = catchAsync(async (req: Request, res: Response) => {
   const updateData = req.body;
   
-  // Parse stringified arrays if needed
-  if (typeof updateData.education === 'string') {
-    try {
-      updateData.education = JSON.parse(updateData.education);
-    } catch (e) {
-      throw new ApiError(httpStatus.BAD_REQUEST, 'Invalid education data format');
-    }
-  }
-  
-  if (typeof updateData.experience === 'string') {
-    try {
-      updateData.experience = JSON.parse(updateData.experience);
-    } catch (e) {
-      throw new ApiError(httpStatus.BAD_REQUEST, 'Invalid experience data format');
-    }
-  }
-  
-  if (typeof updateData.skills === 'string') {
-    try {
-      updateData.skills = JSON.parse(updateData.skills);
-    } catch (e) {
-      throw new ApiError(httpStatus.BAD_REQUEST, 'Invalid skills data format');
-    }
+  // Clean up the update data
+  if (updateData.education) {
+    updateData.education = updateData.education.map((edu: { institution: any; degree: any; fieldOfStudy: any; startYear: string; endYear: string; description: any; }) => ({
+      institution: edu.institution || null,
+      degree: edu.degree || null,
+      fieldOfStudy: edu.fieldOfStudy || null,
+      startYear: edu.startYear ? parseInt(edu.startYear) : null,
+      endYear: edu.endYear ? parseInt(edu.endYear) : null,
+      description: edu.description || null
+    })).filter((edu: { institution: any; degree: any; fieldOfStudy: any; startYear: any; endYear: any; description: any; }) => 
+      edu.institution || edu.degree || edu.fieldOfStudy || 
+      edu.startYear || edu.endYear || edu.description
+    );
   }
 
-  // Handle socialMedia field
-  if (updateData.socialMedia) {
+  if (updateData.experience) {
+    updateData.experience = updateData.experience.map((exp: { company: any; position: any; startDate: any; endDate: any; current: any; description: any; }) => ({
+      company: exp.company || null,
+      position: exp.position || null,
+      startDate: exp.startDate || null,
+      endDate: exp.endDate || null,
+      current: !!exp.current,
+      description: exp.description || null
+    })).filter((exp: { company: any; position: any; startDate: any; endDate: any; description: any; }) => 
+      exp.company || exp.position || exp.startDate || 
+      exp.endDate || exp.description
+    );
+  }
+
+  if (updateData.skills) {
+    updateData.skills = updateData.skills.map((skill: { name: any; level: any; }) => ({
+      name: skill.name || null,
+      level: skill.level || 'beginner'
+    })).filter((skill: { name: any; }) => skill.name);
+  }
+
+  // Handle socialMedia (your current implementation is fine)
+  if (updateData.socialMedia === '') {
+    updateData.socialMedia = {};
+  } else if (typeof updateData.socialMedia === 'string') {
     try {
-      updateData.socialMedia = typeof updateData.socialMedia === 'string' ?
-        JSON.parse(updateData.socialMedia) :
-        updateData.socialMedia;
-      
-      // Ensure it's always an object
-      if (typeof updateData.socialMedia !== 'object' || updateData.socialMedia === null) {
-        updateData.socialMedia = {};
-      }
-    } catch (e) {
+      updateData.socialMedia = JSON.parse(updateData.socialMedia);
+    } catch {
       updateData.socialMedia = {};
     }
-  } else {
-    updateData.socialMedia = {};
   }
 
   const updatedUser = await AuthService.updateUser(
