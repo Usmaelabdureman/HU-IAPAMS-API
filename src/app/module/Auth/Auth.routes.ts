@@ -18,5 +18,6 @@ router.patch('/change-password', auth(), AuthController.changePassword);
 router.post('/forgot-password', AuthController.forgotPassword);
 router.post('/reset-password', AuthController.resetPassword);
 router.get('/me', auth(), AuthController.getMe);
+router.delete('/users', auth(), AuthController.deleteUsers);
 
 export const AuthRoutes = router;

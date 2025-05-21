@@ -470,6 +470,39 @@ const deleteUser = async (
   return { message: 'User deleted successfully' };
 };
 
+const deleteUsers = async (
+  userIds: string[],
+  requesterId: string,
+  requesterRole: string,
+  password?: string
+): Promise<{ message: string }> => {
+  // If password is required for admin bulk deletion (optional security measure)
+  if (requesterRole === 'admin' && password) {
+    const adminUser = await User.findById(requesterId).select('+password');
+    if (!adminUser || !(await adminUser.comparePassword(password))) {
+      throw new ApiError(httpStatus.UNAUTHORIZED, 'Password is incorrect');
+    }
+  }
+
+  const users = await User.find({ _id: { $in: userIds } });
+  if (users.length === 0) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'No users found');
+  }
+
+  // Check authorization
+  if (requesterRole !== 'admin') {
+    // Non-admin can only delete themselves if their ID is in the list
+    if (!userIds.includes(requesterId) || userIds.length > 1) {
+      throw new ApiError(httpStatus.FORBIDDEN, 'Not authorized to delete these users');
+    }
+  }
+
+  // Perform deletion
+  await User.deleteMany({ _id: { $in: userIds } });
+
+  return { message: `${userIds.length} user(s) deleted successfully` };
+};
+
 // permanently delete user
 const permanentlyDeleteUser = async (userId: string): Promise<{ message: string }> => {
   const user = await User.findById(userId);
@@ -590,5 +623,6 @@ export const AuthService = {
   forgotPassword,
   resetPassword,
   getMe,
-  permanentlyDeleteUser
+  permanentlyDeleteUser,
+  deleteUsers
 };

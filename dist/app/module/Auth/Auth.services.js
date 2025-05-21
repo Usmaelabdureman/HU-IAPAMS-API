@@ -387,6 +387,29 @@ const deleteUser = (userId, requesterId, requesterRole) => __awaiter(void 0, voi
     yield user.deleteOne();
     return { message: 'User deleted successfully' };
 });
+const deleteUsers = (userIds, requesterId, requesterRole, password) => __awaiter(void 0, void 0, void 0, function* () {
+    // If password is required for admin bulk deletion (optional security measure)
+    if (requesterRole === 'admin' && password) {
+        const adminUser = yield Auth_models_1.User.findById(requesterId).select('+password');
+        if (!adminUser || !(yield adminUser.comparePassword(password))) {
+            throw new ApiError_1.default(http_status_1.default.UNAUTHORIZED, 'Password is incorrect');
+        }
+    }
+    const users = yield Auth_models_1.User.find({ _id: { $in: userIds } });
+    if (users.length === 0) {
+        throw new ApiError_1.default(http_status_1.default.NOT_FOUND, 'No users found');
+    }
+    // Check authorization
+    if (requesterRole !== 'admin') {
+        // Non-admin can only delete themselves if their ID is in the list
+        if (!userIds.includes(requesterId) || userIds.length > 1) {
+            throw new ApiError_1.default(http_status_1.default.FORBIDDEN, 'Not authorized to delete these users');
+        }
+    }
+    // Perform deletion
+    yield Auth_models_1.User.deleteMany({ _id: { $in: userIds } });
+    return { message: `${userIds.length} user(s) deleted successfully` };
+});
 // permanently delete user
 const permanentlyDeleteUser = (userId) => __awaiter(void 0, void 0, void 0, function* () {
     const user = yield Auth_models_1.User.findById(userId);
@@ -473,5 +496,6 @@ exports.AuthService = {
     forgotPassword,
     resetPassword,
     getMe,
-    permanentlyDeleteUser
+    permanentlyDeleteUser,
+    deleteUsers
 };

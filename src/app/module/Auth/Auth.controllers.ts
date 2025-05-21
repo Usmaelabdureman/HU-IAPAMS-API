@@ -217,6 +217,30 @@ const updateProfile = catchAsync(async (req: Request, res: Response) => {
     data: updatedUser
   });
 });
+
+
+const deleteUsers = catchAsync(async (req: Request, res: Response): Promise<void> => {
+  const { ids } = req.body;
+  const requesterId = req.user?.userId;
+  const requesterRole = req.user?.role;
+  const password = req.headers['x-delete-password'] as string;
+
+  if (!requesterId || !requesterRole) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Requester ID and role are required');
+  }
+
+  if (!ids || !Array.isArray(ids) || ids.length === 0) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'User IDs are required and must be an array');
+  }
+
+  const result = await AuthService.deleteUsers(ids, requesterId, requesterRole, password);
+
+  res.status(httpStatus.OK).send({
+    success: true,
+    message: result.message
+  });
+});
+
 export const AuthController = {
   register,
   login,
@@ -227,5 +251,6 @@ export const AuthController = {
   forgotPassword,
   resetPassword,
   getMe,
-  updateProfile
+  updateProfile,
+  deleteUsers
 };

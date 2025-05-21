@@ -183,6 +183,24 @@ const updateProfile = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, 
         data: updatedUser
     });
 }));
+const deleteUsers = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b;
+    const { ids } = req.body;
+    const requesterId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.userId;
+    const requesterRole = (_b = req.user) === null || _b === void 0 ? void 0 : _b.role;
+    const password = req.headers['x-delete-password'];
+    if (!requesterId || !requesterRole) {
+        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'Requester ID and role are required');
+    }
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'User IDs are required and must be an array');
+    }
+    const result = yield Auth_services_1.AuthService.deleteUsers(ids, requesterId, requesterRole, password);
+    res.status(http_status_1.default.OK).send({
+        success: true,
+        message: result.message
+    });
+}));
 exports.AuthController = {
     register,
     login,
@@ -193,5 +211,6 @@ exports.AuthController = {
     forgotPassword,
     resetPassword,
     getMe,
-    updateProfile
+    updateProfile,
+    deleteUsers
 };
